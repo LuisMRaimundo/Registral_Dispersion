@@ -332,12 +332,8 @@ class RegistralDispersionAnalyzer:
         norm_degree = self.scale_dispersion_by_register_width(span, R)
         results["normalized_dispersion_degree"].append(norm_degree)
         results["normalized_registral_span"].append(norm_degree)
-        results["normalized_mean_pairwise_registral_distance"].append(
-            self.scale_dispersion_by_register_width(dp, R)
-        )
-        results["normalized_registral_centroid"].append(
-            self.normalize_centroid_to_band(centroid, self.register_low, R)
-        )
+        results["normalized_mean_pairwise_registral_distance"].append(self.scale_dispersion_by_register_width(dp, R))
+        results["normalized_registral_centroid"].append(self.normalize_centroid_to_band(centroid, self.register_low, R))
         results["normalized_registral_std"].append(self.scale_dispersion_by_register_width(std, R))
         results["occupancy_entropy"].append(self.compute_occupancy_entropy(pitches))
 

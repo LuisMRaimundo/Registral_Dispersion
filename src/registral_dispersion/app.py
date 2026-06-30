@@ -36,6 +36,7 @@ from registral_dispersion.json_export import (
     write_json_export,
     write_registral_dispersion_csv,
 )
+from registral_dispersion.metric_documentation import CANONICAL_TOOL_NAME
 from registral_dispersion.observation import (
     OBSERVATION_MODE_EVENT_BOUNDARIES,
     OBSERVATION_MODE_FIXED_WINDOW,
@@ -56,7 +57,6 @@ from registral_dispersion.profiles import (
 )
 from registral_dispersion.sampling import PITCH_SAMPLING_MODES
 from registral_dispersion.service import run_registral_dispersion_analysis
-from registral_dispersion.metric_documentation import CANONICAL_TOOL_NAME
 from registral_dispersion.ui_validation import coerce_float, validate_uploaded_score
 from registral_dispersion.visual_theme import GRADIO_THEME_CSS
 

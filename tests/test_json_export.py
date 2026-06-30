@@ -6,13 +6,12 @@ import json
 import math
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 import pytest
 
 import registral_dispersion.json_export as json_export
-from registral_dispersion.metric_documentation import CANONICAL_TOOL_NAME
 from registral_dispersion.json_export import (
     JSON_EXPORT_SCHEMA_VERSION,
     TOOL_SCOPE_STATEMENT,
@@ -23,7 +22,7 @@ from registral_dispersion.json_export import (
     write_global_summary_csv,
     write_json_export,
 )
-
+from registral_dispersion.metric_documentation import CANONICAL_TOOL_NAME
 
 # ---------------------------------------------------------------------------
 # _package_version / _export_provenance
@@ -199,7 +198,7 @@ class _FakeAnalyzer:
     analysis_profile = "component_weighted"
     pitch_sampling_source = "explicit"
     end_time = 8.0
-    events = [object(), object(), object()]
+    events: ClassVar[list[object]] = [object(), object(), object()]
     tie_policy = "merge_ties"
 
 

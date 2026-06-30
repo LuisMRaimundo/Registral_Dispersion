@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Iterator
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Iterator
 
 import pytest
 
@@ -16,7 +16,6 @@ from registral_dispersion.output_paths import (
     export_directory,
     new_export_path,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fake Path-like helpers for OSError branches
@@ -114,9 +113,7 @@ def test_cleanup_returns_safely_when_second_iterdir_fails(
 # ---------------------------------------------------------------------------
 
 
-def test_cleanup_removes_old_files_and_keeps_recent(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_cleanup_removes_old_files_and_keeps_recent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("REGISTRAL_DISPERSION_CACHE_DIR", str(tmp_path))
     old_file = tmp_path / "old.csv"
     recent_file = tmp_path / "recent.csv"
@@ -160,9 +157,7 @@ def test_cleanup_continues_when_individual_stat_or_unlink_fails(
 # ---------------------------------------------------------------------------
 
 
-def test_cleanup_prunes_to_max_files_by_mtime(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_cleanup_prunes_to_max_files_by_mtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("REGISTRAL_DISPERSION_CACHE_DIR", str(tmp_path))
     now = time.time()
     paths: list[Path] = []
@@ -209,9 +204,7 @@ def test_cleanup_max_files_pruning_survives_unlink_failure(
 # ---------------------------------------------------------------------------
 
 
-def test_export_directory_creates_missing_parent(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_export_directory_creates_missing_parent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     export_dir = tmp_path / "nested" / "exports"
     monkeypatch.setenv("REGISTRAL_DISPERSION_CACHE_DIR", str(export_dir))
     result = export_directory()
@@ -227,9 +220,7 @@ def test_export_directory_creates_missing_parent(
         "HOMOGENEITY_CACHE_DIR",
     ],
 )
-def test_export_directory_respects_env_aliases(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, env_var: str
-) -> None:
+def test_export_directory_respects_env_aliases(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, env_var: str) -> None:
     for key in (
         "REGISTRAL_DISPERSION_CACHE_DIR",
         "REGISTER_UNIFORMITY_CACHE_DIR",
@@ -240,9 +231,7 @@ def test_export_directory_respects_env_aliases(
     assert export_directory() == tmp_path
 
 
-def test_new_export_path_uses_prefix_and_suffix(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_new_export_path_uses_prefix_and_suffix(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("REGISTRAL_DISPERSION_CACHE_DIR", str(tmp_path))
     path = Path(new_export_path("dispersion_", ".csv"))
     assert path.parent == tmp_path
@@ -250,18 +239,14 @@ def test_new_export_path_uses_prefix_and_suffix(
     assert path.suffix == ".csv"
 
 
-def test_new_export_path_supports_empty_suffix(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_new_export_path_supports_empty_suffix(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("REGISTRAL_DISPERSION_CACHE_DIR", str(tmp_path))
     path = Path(new_export_path("data_", ""))
     assert path.parent == tmp_path
     assert path.name.startswith("data_")
 
 
-def test_new_export_path_preserves_spaces_and_dots_in_prefix(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_new_export_path_preserves_spaces_and_dots_in_prefix(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("REGISTRAL_DISPERSION_CACHE_DIR", str(tmp_path))
     prefix = "my export.v2."
     path = Path(new_export_path(prefix, ".png"))

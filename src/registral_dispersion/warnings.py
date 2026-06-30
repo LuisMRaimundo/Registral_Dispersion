@@ -14,9 +14,7 @@ WARN_COMPONENT_WEIGHTED = (
     "Component-weighted profile counts duplicated unisons/event instances; interpret as "
     "component-weighted registral spread, not density-independent occupied-space geometry."
 )
-WARN_NORMALIZED_PRIMARY = (
-    "Normalized values are register-band-relative, not perceptual brightness."
-)
+WARN_NORMALIZED_PRIMARY = "Normalized values are register-band-relative, not perceptual brightness."
 WARN_FIXED_WINDOW_ONE_NUMBER = (
     "One-number summary uses fixed_window observation: global values are sampled trajectory "
     "summaries, not duration-weighted event-state aggregates."

@@ -44,9 +44,7 @@ _EMBER_STOPS: list[tuple[float, str]] = [
     (1.0, "#fff8eb"),
 ]
 
-PLOTLY_EMBER_SCALE: list[list[float | str]] = [
-    [pos, col] for pos, col in _EMBER_STOPS
-]
+PLOTLY_EMBER_SCALE: list[list[float | str]] = [[pos, col] for pos, col in _EMBER_STOPS]
 
 FONT_SERIF = "Georgia, 'Palatino Linotype', 'Times New Roman', serif"
 FONT_SANS = "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
@@ -117,7 +115,6 @@ def style_mpl_heatmap(
 ) -> None:
     bg = CANVAS_BG if dark else PANEL_BG_LIGHT
     fg = TEXT_PRIMARY if dark else TEXT_DARK
-    grid = GRID_COLOR if dark else GRID_COLOR_LIGHT
     fig.patch.set_facecolor(bg)
     ax.set_facecolor(PANEL_BG if dark else "#ffffff")
     ax.set_title(title, fontsize=15, fontweight="500", color=fg, pad=14, fontfamily="serif")

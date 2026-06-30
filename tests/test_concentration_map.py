@@ -138,9 +138,7 @@ class TestConcentrationMatrix(unittest.TestCase):
         sc = stream.Score()
         sc.insert(0, p)
         dt = 0.5
-        b = build_registral_concentration_matrix(
-            sc, 48.0, 72.0, time_bin_size=dt, concentration_mode="event_instances"
-        )
+        b = build_registral_concentration_matrix(sc, 48.0, 72.0, time_bin_size=dt, concentration_mode="event_instances")
         edges = np.asarray(b["time_bin_edges"], dtype=float)
         an = RegistralDispersionAnalyzer.from_stream(sc, 48.0, 72.0, time_step=dt)
         results = an.analyze_score(window_size=1.0)

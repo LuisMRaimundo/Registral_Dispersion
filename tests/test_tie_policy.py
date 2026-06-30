@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import pytest
 from music21 import note, stream
 from music21.tie import Tie
@@ -13,7 +15,6 @@ from registral_dispersion.tie_policy import (
     apply_tie_policy,
     normalize_tie_policy,
 )
-
 
 # ---------------------------------------------------------------------------
 # normalize_tie_policy — defaults
@@ -133,7 +134,7 @@ class _NoteWithResidualTie:
 
 
 class _RecurseWithTiedNotes:
-    notes = [_NoteWithResidualTie()]
+    notes: ClassVar[list[_NoteWithResidualTie]] = [_NoteWithResidualTie()]
 
 
 class _MergedStreamWithResidualTies:

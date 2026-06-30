@@ -143,9 +143,7 @@ class TestAnalysisProfileResolution(unittest.TestCase):
 
 class TestNormalizationScale(unittest.TestCase):
     def test_nan_and_zero(self):
-        self.assertTrue(
-            np.isnan(RegistralDispersionAnalyzer.scale_dispersion_by_register_width(float("nan"), 24.0))
-        )
+        self.assertTrue(np.isnan(RegistralDispersionAnalyzer.scale_dispersion_by_register_width(float("nan"), 24.0)))
         self.assertEqual(RegistralDispersionAnalyzer.scale_dispersion_by_register_width(0.0, 24.0), 0.0)
 
     def test_one_octave_in_two_octave_register(self):
@@ -233,9 +231,7 @@ class TestDispersionFormulas(unittest.TestCase):
                 RegistralDispersionAnalyzer.compute_registral_span(p),
             )
         empty = np.array([], dtype=float)
-        self.assertTrue(
-            np.isnan(RegistralDispersionAnalyzer.compute_dispersion_degree(empty))
-        )
+        self.assertTrue(np.isnan(RegistralDispersionAnalyzer.compute_dispersion_degree(empty)))
         self.assertTrue(np.isnan(RegistralDispersionAnalyzer.compute_registral_span(empty)))
 
     def test_empty_window(self):
@@ -558,8 +554,7 @@ class TestEventBoundariesObservation(unittest.TestCase):
         gap_idx = next(
             i
             for i in range(len(r["interval_start"]))
-            if r["interval_start"][i] >= 1.0 - 1e-9
-            and r["interval_end"][i] <= 2.0 + 1e-9
+            if r["interval_start"][i] >= 1.0 - 1e-9 and r["interval_end"][i] <= 2.0 + 1e-9
         )
         self.assertEqual(r["active_note_count"][gap_idx], 0)
         self.assertTrue(np.isnan(r["registral_span"][gap_idx]))
@@ -709,7 +704,24 @@ class TestAnalysisPresets(unittest.TestCase):
     def test_apply_preset_updates_values(self):
         updates = apply_analysis_preset(PRESET_STATIC_VERTICAL)
         self.assertEqual(len(updates), 16)
-        guidance, reg_preset, reg_lo, reg_hi, dt, win, profile, obs, pitch, span, ent, norm_y, heat, hmode, hnorm, hcmap = updates
+        (
+            guidance,
+            reg_preset,
+            reg_lo,
+            reg_hi,
+            dt,
+            _win,
+            _profile,
+            obs,
+            _pitch,
+            _span,
+            _ent,
+            _norm_y,
+            _heat,
+            _hmode,
+            _hnorm,
+            _hcmap,
+        ) = updates
         self.assertIn("Static vertical aggregate", guidance)
         self.assertEqual(reg_preset["value"], PRESET_SPECS[PRESET_STATIC_VERTICAL].register_preset)
         self.assertEqual(reg_lo["value"], "A0")
@@ -943,8 +955,9 @@ class TestPlottingSmoke(unittest.TestCase):
 
 class TestOutputPaths(unittest.TestCase):
     def test_new_export_path_under_tmp(self):
-        with tempfile.TemporaryDirectory() as td, mock.patch.dict(
-            os.environ, {"REGISTRAL_DISPERSION_CACHE_DIR": td}, clear=False
+        with (
+            tempfile.TemporaryDirectory() as td,
+            mock.patch.dict(os.environ, {"REGISTRAL_DISPERSION_CACHE_DIR": td}, clear=False),
         ):
             p = new_export_path("test_", ".csv")
             Path(p).write_text("x", encoding="utf-8")

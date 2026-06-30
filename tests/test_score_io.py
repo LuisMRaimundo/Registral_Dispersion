@@ -67,9 +67,7 @@ def test_validate_zip_archive_rejects_unsafe_member(tmp_path: Path) -> None:
         validate_zip_archive(str(zpath))
 
 
-def test_validate_zip_archive_rejects_too_many_members(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_validate_zip_archive_rejects_too_many_members(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(score_io, "MAX_ZIP_MEMBERS", 2)
     zpath = tmp_path / "many.mxl"
     with zipfile.ZipFile(zpath, "w") as zf:
@@ -79,9 +77,7 @@ def test_validate_zip_archive_rejects_too_many_members(
         validate_zip_archive(str(zpath))
 
 
-def test_validate_zip_archive_rejects_huge_single_member(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_validate_zip_archive_rejects_huge_single_member(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     zpath = tmp_path / "huge.mxl"
     with zipfile.ZipFile(zpath, "w") as zf:
         zf.writestr("score.xml", "<score-partwise/>")
@@ -150,9 +146,7 @@ def test_validate_score_path_rejects_empty_file(tmp_path: Path) -> None:
         validate_score_path(str(empty))
 
 
-def test_validate_score_path_rejects_file_too_large(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_validate_score_path_rejects_file_too_large(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(score_io, "MAX_SCORE_FILE_BYTES", 5)
     big = tmp_path / "big.xml"
     big.write_text("0123456789")
@@ -160,9 +154,7 @@ def test_validate_score_path_rejects_file_too_large(
         validate_score_path(str(big))
 
 
-def test_validate_score_path_mxl_calls_validate_zip_archive(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_validate_score_path_mxl_calls_validate_zip_archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     zpath = tmp_path / "score.mxl"
     with zipfile.ZipFile(zpath, "w") as zf:
         zf.writestr("score.xml", "<score-partwise/>")
@@ -254,9 +246,7 @@ def test_parse_score_midi_extensions_without_musicxml_format(
     patched_parse.assert_called_once_with(str(path))
 
 
-def test_parse_score_integration_with_fixture(
-    monkeypatch: pytest.MonkeyPatch, patched_parse: MagicMock
-) -> None:
+def test_parse_score_integration_with_fixture(monkeypatch: pytest.MonkeyPatch, patched_parse: MagicMock) -> None:
     if not FIXTURE_XML.is_file():
         pytest.skip("Fixture not found")
     monkeypatch.setattr(score_io, "validate_score_path", lambda _path: None)

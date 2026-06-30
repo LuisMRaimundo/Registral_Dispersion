@@ -19,9 +19,7 @@ def normalize_tie_policy(value: Any) -> str:
     s = str(value).strip().lower().replace("-", "_").replace(" ", "_")
     if s in TIE_POLICIES:
         return s
-    raise ValueError(
-        f"Unknown tie_policy {value!r}; expected {TIE_POLICY_AS_IMPORTED!r} or {TIE_POLICY_MERGE_TIES!r}."
-    )
+    raise ValueError(f"Unknown tie_policy {value!r}; expected {TIE_POLICY_AS_IMPORTED!r} or {TIE_POLICY_MERGE_TIES!r}.")
 
 
 def apply_tie_policy(score_stream, tie_policy: Any = DEFAULT_TIE_POLICY) -> tuple[Any, list[str]]:
@@ -39,9 +37,7 @@ def apply_tie_policy(score_stream, tie_policy: Any = DEFAULT_TIE_POLICY) -> tupl
     try:
         merged = score_stream.stripTies(inPlace=False)
     except Exception as exc:
-        warnings.append(
-            f"tie_policy merge_ties: stripTies failed ({exc}); falling back to as_imported stream."
-        )
+        warnings.append(f"tie_policy merge_ties: stripTies failed ({exc}); falling back to as_imported stream.")
         return score_stream, warnings
 
     remaining = 0

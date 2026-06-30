@@ -491,12 +491,7 @@ def make_registral_concentration_map_plotly(
         midi = int(hover_midi[i, j])
         nm = str(hover_names[i, j])
         raw = float(mat[i, j])
-        return (
-            f"<b>{nm}</b><br>"
-            f"t ∈ [{lo_b:.2f}, {hi_b:.2f}) qL<br>"
-            f"MIDI {midi}<br>"
-            f"Activity: {raw:.0f} component(s)"
-        )
+        return f"<b>{nm}</b><br>t ∈ [{lo_b:.2f}, {hi_b:.2f}) qL<br>MIDI {midi}<br>Activity: {raw:.0f} component(s)"
 
     z_text = np.array(
         [[_hover_cell(i, j) for j in range(disp.shape[1])] for i in range(disp.shape[0])],

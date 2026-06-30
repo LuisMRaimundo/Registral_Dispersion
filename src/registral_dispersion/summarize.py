@@ -50,9 +50,7 @@ def summarize_registral_dispersion(
     global_summary = out.get("global_summary") or compute_global_summary(
         out["results"], out["params"], analyzer=out.get("analyzer")
     )
-    primary_metric, primary_value, secondary_metric, secondary_value = primary_one_number_from_summary(
-        global_summary
-    )
+    primary_metric, primary_value, secondary_metric, secondary_value = primary_one_number_from_summary(global_summary)
     warnings = merge_warnings(
         out.get("warnings"),
         collect_interpretation_warnings(out["params"], context="one_number_summary"),

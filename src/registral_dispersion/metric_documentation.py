@@ -36,8 +36,10 @@ rules above.
 (``max(pitches) - min(pitches)`` in semitones; numerically identical to ``registral_span``).
 ``mean_pairwise_registral_distance`` is a **supplementary** descriptor when clustering is uneven.
 ``registral_centroid`` and ``registral_std`` summarize **tessitura location** and **cluster tightness** (complementary
-to span/pairwise; raw centroid is **not** transposition-invariant). ``occupancy_entropy`` is **not** registral dispersion;
-it is a legacy **register-uniformity / occupancy-evenness** recipe retained for comparison. This tool does **not** infer density, harmony, pitch-class set structure,
+to span/pairwise; raw centroid is **not** transposition-invariant). ``occupancy_entropy`` is **not**
+registral dispersion;
+it is a legacy **register-uniformity / occupancy-evenness** recipe retained for comparison.
+This tool does **not** infer density, harmony, pitch-class set structure,
 tessitura labels, acoustic brightness, or orchestration.
 """
 
@@ -48,7 +50,8 @@ METHODOLOGICAL_NOTE_REGISTRAL = (
     "components in semitone space. The canonical metric is dispersion_degree "
     "(= registral_span = max(pitches) - min(pitches), semitones). "
     "mean_pairwise_registral_distance "
-    "(D_pairwise = (2/(n(n-1))) * sum_{i<j} |p_i - p_j|) is supplementary. These descriptors are transposition-invariant "
+    "(D_pairwise = (2/(n(n-1))) * sum_{i<j} |p_i - p_j|) is supplementary. "
+    "These descriptors are transposition-invariant "
     "in the sense that they depend only on relative MIDI pitch distances within each temporal support, "
     "not on absolute tessitura labels; they do not measure pitch-class set content, harmony, density, acoustic "
     "brightness, or orchestration. Complementary summaries registral_centroid (mean MIDI pitch) and registral_std "
@@ -71,8 +74,7 @@ METRIC_DEFINITION_PRIMARY = (
 )
 
 DISPERSION_DEGREE_DEFINITION = (
-    "dispersion_degree = max(active MIDI pitches) - min(active MIDI pitches) in semitones "
-    "(alias: registral_span)."
+    "dispersion_degree = max(active MIDI pitches) - min(active MIDI pitches) in semitones (alias: registral_span)."
 )
 
 # Single-line export blurb (CSV comments + JSON); must match implementation in analyzer.py.

@@ -152,9 +152,7 @@ def compute_global_summary(
             norm_pairwise, durations
         )
         summary["duration_weighted_occupancy_entropy"] = _duration_weighted_mean(entropy, durations)
-        summary["duration_weighted_occupancy_entropy_note"] = (
-            "occupancy evenness index; not registral dispersion"
-        )
+        summary["duration_weighted_occupancy_entropy_note"] = "occupancy evenness index; not registral dispersion"
         summary["median_registral_span"] = _duration_weighted_median(span, durations)
         summary["median_mean_pairwise_registral_distance"] = _duration_weighted_median(pairwise, durations)
         summary["max_registral_span"] = _nan_max(span)

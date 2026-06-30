@@ -52,9 +52,7 @@ class RegistralDispersionSeriesResult:
         if "interval_start" not in d:
             d["interval_start"] = list(d["window_start"])
             d["interval_end"] = list(d["window_end"])
-            d["interval_duration"] = [
-                float(d["window_end"][i]) - float(d["window_start"][i]) for i in range(n)
-            ]
+            d["interval_duration"] = [float(d["window_end"][i]) - float(d["window_start"][i]) for i in range(n)]
         if "dispersion_degree" not in d:
             d["dispersion_degree"] = list(d["registral_span"])
         if "normalized_dispersion_degree" not in d:
