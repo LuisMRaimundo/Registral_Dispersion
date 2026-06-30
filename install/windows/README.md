@@ -1,6 +1,6 @@
 # Registral_Dispersion - Windows installation
 
-**Repository:** https://github.com/LuisMRaimundo/register-dispersion-analysis
+**Repository:** https://github.com/LuisMRaimundo/Registral_Dispersion
 
 ## Standard installation (no Python required)
 

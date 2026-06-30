@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- GitHub repository renamed to **Registral_Dispersion** (`LuisMRaimundo/Registral_Dispersion`); documentation and installer URLs updated.
 - Canonical research tool name **Registral_Dispersion** applied across documentation, UI, exports (`canonical_tool_name`), and launchers. Legacy aliases (`register_uniformity`, homogeneity cache env vars) retained for backward compatibility only.
 
 ## 0.3.0 (2026-05-20)

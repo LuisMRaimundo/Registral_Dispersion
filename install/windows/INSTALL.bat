@@ -14,7 +14,7 @@ echo  ============================================================
 echo   Registral_Dispersion - One-click installer (Windows)
 echo  ============================================================
 echo.
-echo  GitHub: https://github.com/LuisMRaimundo/register-dispersion-analysis
+echo  GitHub: https://github.com/LuisMRaimundo/Registral_Dispersion
 echo.
 echo  This installs the registral dispersion tool and launcher scripts.
 echo  Do not close this window until finished.

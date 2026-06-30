@@ -1,6 +1,6 @@
 # Registral_Dispersion - Windows installer constants
 $script:RegistralConfig = @{
-    GitHubRepoUrl      = 'https://github.com/LuisMRaimundo/register-dispersion-analysis'
+    GitHubRepoUrl      = 'https://github.com/LuisMRaimundo/Registral_Dispersion'
     AppName            = 'Registral_Dispersion'
     PythonVersion      = '3.11'
     PythonMinMinor     = 10
