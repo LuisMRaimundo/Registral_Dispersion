@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 
 from registral_dispersion.metric_documentation import (
+    CANONICAL_TOOL_NAME,
     CSV_COLUMN_HEADER,
     DISPERSION_DEGREE_DEFINITION,
     METHODOLOGICAL_NOTE_ANALYSIS_PROFILES,
@@ -49,6 +50,7 @@ def _package_version() -> str:
 def _export_provenance() -> dict[str, str | bool]:
     """Software identity for reproducible exports (JSON; mirrored in CSV comments where applicable)."""
     return {
+        "canonical_tool_name": CANONICAL_TOOL_NAME,
         "package_name": "registral-dispersion",
         "package_version": _package_version(),
         "tool_role": "research_software",
@@ -192,7 +194,7 @@ def write_global_summary_csv(path: str | Path, global_summary: dict[str, Any]) -
     """
     p = Path(path)
     lines = [
-        "# registral-dispersion global summary (whole-score aggregate)",
+        f"# {CANONICAL_TOOL_NAME} global summary (whole-score aggregate)",
         f"# aggregation_method: {global_summary.get('aggregation_method')}",
         "key,value",
     ]

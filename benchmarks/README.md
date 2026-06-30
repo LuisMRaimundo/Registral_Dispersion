@@ -1,4 +1,4 @@
-# Registral dispersion benchmarks
+# Registral_Dispersion benchmarks
 
 Controlled **synthetic fixtures** for regression and frozen-output comparison.
 

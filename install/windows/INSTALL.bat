@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions
-title Registral Space Analysis - Installer
+title Registral_Dispersion - Installer
 cd /d "%~dp0\..\.." || (
   echo ERROR: Cannot find project root.
   pause
@@ -11,7 +11,7 @@ echo.
 echo  *** USE THIS FILE FOR NORMAL INSTALL ***
 echo.
 echo  ============================================================
-echo   Registral Space Analysis - One-click installer (Windows)
+echo   Registral_Dispersion - One-click installer (Windows)
 echo  ============================================================
 echo.
 echo  GitHub: https://github.com/LuisMRaimundo/register-dispersion-analysis

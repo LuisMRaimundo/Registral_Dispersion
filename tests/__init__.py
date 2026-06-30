@@ -1,1 +1,1 @@
-# Tests for Homogeneity Analyser
+# Tests for Registral_Dispersion

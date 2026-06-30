@@ -1,2 +1,2 @@
 @echo off
-call "%~dp0Launch-Registral-Space-Analysis.bat"
+call "%~dp0Launch-Registral-Dispersion.bat"

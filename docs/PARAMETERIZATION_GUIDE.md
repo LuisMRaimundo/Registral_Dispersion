@@ -1,6 +1,6 @@
 # Registral dispersion — recommended parameterization
 
-**Tool:** `registral-dispersion` v0.3.0  
+**Tool:** **Registral_Dispersion** (`registral-dispersion` v0.3.0)  
 **Purpose:** advised settings for common research setups in symbolic-score registral dispersion analysis:
 
 **Metric definitions and interpretive limits:** [METRIC_SEMANTICS.md](METRIC_SEMANTICS.md)
@@ -357,4 +357,4 @@ Then treat **`mean_pairwise_registral_distance`** as primary in both setups.
 
 ---
 
-*Document version: 2026-06-03 — matches registral-dispersion 0.3.0 (plotting: primary `dispersion_degree`; JSON schema 1.8).*
+*Document version: 2026-06-03 — matches Registral_Dispersion / registral-dispersion 0.3.0 (plotting: primary `dispersion_degree`; JSON schema 1.8).*

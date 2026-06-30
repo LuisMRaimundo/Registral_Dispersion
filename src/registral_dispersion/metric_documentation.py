@@ -41,6 +41,8 @@ it is a legacy **register-uniformity / occupancy-evenness** recipe retained for 
 tessitura labels, acoustic brightness, or orchestration.
 """
 
+CANONICAL_TOOL_NAME = "Registral_Dispersion"
+
 METHODOLOGICAL_NOTE_REGISTRAL = (
     "Registral dispersion is operationalized here as the vertical opening/compression of active notated "
     "components in semitone space. The canonical metric is dispersion_degree "

@@ -1,5 +1,5 @@
 #Requires -Version 5.1
-# Registral Space Analysis - Windows one-click installer
+# Registral_Dispersion - Windows one-click installer
 
 $ErrorActionPreference = 'Stop'
 $InstallerRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }

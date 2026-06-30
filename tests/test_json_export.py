@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 
 import registral_dispersion.json_export as json_export
+from registral_dispersion.metric_documentation import CANONICAL_TOOL_NAME
 from registral_dispersion.json_export import (
     JSON_EXPORT_SCHEMA_VERSION,
     TOOL_SCOPE_STATEMENT,
@@ -46,6 +47,7 @@ def test_export_provenance_includes_required_fields(
     monkeypatch.setattr(json_export, "version", _raise)
     prov = _export_provenance()
     assert prov["package_version"] == "unknown"
+    assert prov["canonical_tool_name"] == CANONICAL_TOOL_NAME
     assert prov["package_name"] == "registral-dispersion"
     assert prov["symbolic_score_only"] is True
     assert prov["tool_role"] == "research_software"
@@ -126,7 +128,7 @@ def test_write_global_summary_csv_handles_mixed_values(tmp_path: Path) -> None:
     assert csv_path.is_file()
     text = csv_path.read_text(encoding="utf-8")
     lines = text.splitlines()
-    assert lines[0].startswith("# registral-dispersion global summary")
+    assert lines[0].startswith(f"# {CANONICAL_TOOL_NAME} global summary")
     assert "aggregation_method: duration_weighted" in lines[1]
     assert lines[2] == "key,value"
 
@@ -215,6 +217,7 @@ def test_build_registral_dispersion_export_minimal_success(tmp_path: Path) -> No
     assert doc["score_path"] == "/path/to/score.xml"
     assert doc["summary"] == {"n_windows": 1}
     assert doc["error"] is None
+    assert doc["canonical_tool_name"] == CANONICAL_TOOL_NAME
     assert doc["package_name"] == "registral-dispersion"
     assert doc["symbolic_score_only"] is True
     assert doc["tool_scope_statement"] == TOOL_SCOPE_STATEMENT

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Registral Space Analysis - One-click installer (Linux)
+# Registral_Dispersion - One-click installer (Linux)
 # Run: chmod +x install/linux/install.sh && ./install/linux/install.sh
 
 set -euo pipefail
@@ -8,7 +8,7 @@ cd "$ROOT"
 
 echo ""
 echo "============================================================"
-echo "  Registral Space Analysis - One-click installer (Linux)"
+echo "  Registral_Dispersion - One-click installer (Linux)"
 echo "============================================================"
 echo ""
 echo "Copyright (c) 2026 Luis Raimundo. All rights reserved."
@@ -64,20 +64,20 @@ source ".venv/bin/activate"
 python -m pip install --upgrade pip
 python -m pip install -e .
 
-cp "install/launchers/launch-registral-space-analysis.sh" "launch-registral-space-analysis.sh"
+cp "install/launchers/launch-registral-dispersion.sh" "launch-registral-dispersion.sh"
 cp "install/launchers/summarize-score.sh" "summarize-score.sh"
-chmod +x "launch-registral-space-analysis.sh" "summarize-score.sh"
+chmod +x "launch-registral-dispersion.sh" "summarize-score.sh"
 
 echo ""
 echo "============================================================"
 echo "  Installation complete."
 echo "============================================================"
 echo ""
-echo "Run: ./launch-registral-space-analysis.sh"
+echo "Run: ./launch-registral-dispersion.sh"
 echo "Or:  ./summarize-score.sh --score path/to/score.musicxml"
 echo ""
 
 read -r -p "Launch the interface now? [Y/n]: " RUN
 if [[ ! "$RUN" =~ ^[Nn]$ ]]; then
-  ./launch-registral-space-analysis.sh
+  ./launch-registral-dispersion.sh
 fi

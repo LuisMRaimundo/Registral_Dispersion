@@ -1,5 +1,7 @@
 # Registral regression fixtures (Phase 1)
 
+**Tool:** **Registral_Dispersion**
+
 **Location:** `corpus/fixtures/registral_regression/`  
 **Generator:** `corpus/scripts/create_registral_regression_fixtures.py`  
 **Inspection report:** `corpus/reports/registral_regression_inspection.md` (exploratory, not golden)  

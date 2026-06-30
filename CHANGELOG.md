@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Canonical research tool name **Registral_Dispersion** applied across documentation, UI, exports (`canonical_tool_name`), and launchers. Legacy aliases (`register_uniformity`, homogeneity cache env vars) retained for backward compatibility only.
+
 ## 0.3.0 (2026-05-20)
 
 - Built-in **global summary** (`global_summary`) on every analysis run.

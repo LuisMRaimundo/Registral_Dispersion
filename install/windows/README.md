@@ -1,4 +1,4 @@
-# Registral Space Analysis - Windows installation
+# Registral_Dispersion - Windows installation
 
 **Repository:** https://github.com/LuisMRaimundo/register-dispersion-analysis
 
@@ -12,7 +12,7 @@
 
 ## After install
 
-- **GUI:** `Launch-Registral-Space-Analysis.bat` (project root)
+- **GUI:** `Launch-Registral-Dispersion.bat` (project root)
 - **CLI summary:** `Summarize-Score.bat --score path\to\score.musicxml`
 
 ## Install log

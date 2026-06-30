@@ -973,6 +973,7 @@ class TestJsonExport(unittest.TestCase):
         self.assertIn("metric_formulas", doc)
         self.assertIn("package_version", doc)
         self.assertEqual(doc.get("tool_role"), "research_software")
+        self.assertEqual(doc.get("canonical_tool_name"), "Registral_Dispersion")
         sm = doc.get("score_metadata") or {}
         self.assertEqual(sm.get("normalization_reference"), NORMALIZATION_REFERENCE)
         self.assertIn("register_low_midi", sm)

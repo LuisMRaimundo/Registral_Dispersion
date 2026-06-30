@@ -1,6 +1,6 @@
 # Metric semantics and interpretive limits
 
-**Tool:** `registral-dispersion` v0.3.0  
+**Tool:** **Registral_Dispersion** (`registral-dispersion` v0.3.0)  
 **Status:** methodological reference (aligned with `src/registral_dispersion/analyzer.py`, `concentration_map.py`, and export metadata)
 
 This document defines what the exported numbers **mean**, what they **do not** mean, and how to use them in musicological interpretation. For advised parameter sets, see [PARAMETERIZATION_GUIDE.md](PARAMETERIZATION_GUIDE.md).

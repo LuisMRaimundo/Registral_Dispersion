@@ -1,5 +1,5 @@
 #!/bin/bash
-# Registral Space Analysis - One-click installer (macOS)
+# Registral_Dispersion - One-click installer (macOS)
 # Double-click in Finder, or: chmod +x INSTALL.command && ./INSTALL.command
 
 set -euo pipefail
@@ -8,7 +8,7 @@ cd "$ROOT"
 
 echo ""
 echo "============================================================"
-echo "  Registral Space Analysis - One-click installer (macOS)"
+echo "  Registral_Dispersion - One-click installer (macOS)"
 echo "============================================================"
 echo ""
 echo "Copyright (c) 2026 Luis Raimundo. All rights reserved."
@@ -58,21 +58,21 @@ source ".venv/bin/activate"
 python -m pip install --upgrade pip
 python -m pip install -e .
 
-cp "install/launchers/Launch-Registral-Space-Analysis.command" "Launch-Registral-Space-Analysis.command"
+cp "install/launchers/Launch-Registral-Dispersion.command" "Launch-Registral-Dispersion.command"
 cp "install/launchers/summarize-score.sh" "summarize-score.sh"
-chmod +x "Launch-Registral-Space-Analysis.command" "summarize-score.sh"
+chmod +x "Launch-Registral-Dispersion.command" "summarize-score.sh"
 
 echo ""
 echo "============================================================"
 echo "  Installation complete."
 echo "============================================================"
 echo ""
-echo "Double-click: Launch-Registral-Space-Analysis.command"
+echo "Double-click: Launch-Registral-Dispersion.command"
 echo "Or run: ./summarize-score.sh --score path/to/score.musicxml"
 echo ""
 read -r -p "Launch the interface now? [Y/n]: " RUN
 if [[ ! "$RUN" =~ ^[Nn]$ ]]; then
-  open "Launch-Registral-Space-Analysis.command" 2>/dev/null || ./Launch-Registral-Space-Analysis.command
+  open "Launch-Registral-Dispersion.command" 2>/dev/null || ./Launch-Registral-Dispersion.command
 fi
 
 read -r -p "Press Enter to close..."

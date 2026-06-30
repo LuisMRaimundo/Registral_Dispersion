@@ -1,14 +1,14 @@
 # One-click installers
 
-**Registral Space Analysis** — symbolic-score registral dispersion tool.
+**Registral_Dispersion** — symbolic-score registral dispersion tool.
 
 You do **not** need to know Python. Run the installer for your system once; then use the launcher in the project folder.
 
 | System | First-time install | After install |
 |--------|-------------------|---------------|
-| **Windows 10/11** | Double-click `install/windows/INSTALL.bat` | `Launch-Registral-Space-Analysis.bat` (at repo root; run installer first) |
-| **macOS** | Double-click `install/macos/INSTALL.command` (if blocked: right-click → Open) | `Launch-Registral-Space-Analysis.command` |
-| **Linux** | In a terminal: `chmod +x install/linux/install.sh && ./install/linux/install.sh` | `./launch-registral-space-analysis.sh` |
+| **Windows 10/11** | Double-click `install/windows/INSTALL.bat` | `Launch-Registral-Dispersion.bat` (at repo root; run installer first) |
+| **macOS** | Double-click `install/macos/INSTALL.command` (if blocked: right-click → Open) | `Launch-Registral-Dispersion.command` |
+| **Linux** | In a terminal: `chmod +x install/linux/install.sh && ./install/linux/install.sh` | `./launch-registral-dispersion.sh` |
 
 Installers will:
 

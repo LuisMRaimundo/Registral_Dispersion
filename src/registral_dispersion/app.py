@@ -56,6 +56,7 @@ from registral_dispersion.profiles import (
 )
 from registral_dispersion.sampling import PITCH_SAMPLING_MODES
 from registral_dispersion.service import run_registral_dispersion_analysis
+from registral_dispersion.metric_documentation import CANONICAL_TOOL_NAME
 from registral_dispersion.ui_validation import coerce_float, validate_uploaded_score
 from registral_dispersion.visual_theme import GRADIO_THEME_CSS
 
@@ -364,10 +365,10 @@ def build_demo() -> gr.Blocks:
         button_primary_background_fill="#b45309",
         button_primary_background_fill_hover="#92400e",
     )
-    demo = gr.Blocks(title="Registral dispersion", theme=theme, css=GRADIO_THEME_CSS)
+    demo = gr.Blocks(title=CANONICAL_TOOL_NAME, theme=theme, css=GRADIO_THEME_CSS)
     with demo:
         gr.HTML(
-            "<div class='hero-title'>Registral dispersion</div>"
+            f"<div class='hero-title'>{CANONICAL_TOOL_NAME}</div>"
             "<div class='hero-sub'>Symbolic analysis of vertical register structure — "
             "dispersion metrics and a pitch–time density map. "
             "<em>Dispersão no registo.</em></div>"

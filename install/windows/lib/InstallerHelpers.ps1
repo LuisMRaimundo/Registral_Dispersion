@@ -203,7 +203,7 @@ function Initialize-ProjectVenv {
     if (-not (Test-Path $venvPython)) {
         throw "Virtual environment failed at $VenvDir"
     }
-    Write-InstallLog 'Installing Registral Space Analysis (editable, may take several minutes)...'
+    Write-InstallLog 'Installing Registral_Dispersion (editable, may take several minutes)...'
     & $venvPython -m pip install --upgrade pip wheel setuptools
     if ($LASTEXITCODE -ne 0) { throw 'pip upgrade failed.' }
     & $venvPython -m pip install -e $ProjectRoot

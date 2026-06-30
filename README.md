@@ -1,5 +1,6 @@
-# Registral Space Analysis (registral dispersion)
+# Registral_Dispersion
 
+**Canonical tool name:** **Registral_Dispersion**  
 **Repository:** [github.com/LuisMRaimundo/register-dispersion-analysis](https://github.com/LuisMRaimundo/register-dispersion-analysis)
 
 **What this is:** a **symbolic-score–only** research tool that measures **registral dispersion**—how spread out or compact **active notated MIDI pitches** are inside a user band—using **registral span** and **mean pairwise registral distance** (semitones), with optional **occupancy entropy** (a separate, legacy-style occupancy-evenness index, **not** the main dispersion read).
@@ -10,9 +11,9 @@
 |---------------|-------|-------|
 | Double-click **`install/windows/INSTALL.bat`** | Double-click **`install/macos/INSTALL.command`** | Run **`install/linux/install.sh`** |
 
-See **[install/README.md](install/README.md)** for details. **Run the installer once first** (it creates `.venv`, which is not included in the clone). Then launch with **`Launch-Registral-Space-Analysis.bat`** (Windows) or **`Launch-Registral-Space-Analysis.command`** (macOS). If you open a launcher before installing, it will tell you to run the installer.
+See **[install/README.md](install/README.md)** for details. **Run the installer once first** (it creates `.venv`, which is not included in the clone). Then launch with **`Launch-Registral-Dispersion.bat`** (Windows) or **`Launch-Registral-Dispersion.command`** (macOS). If you open a launcher before installing, it will tell you to run the installer.
 
-Installable distribution name: **`registral-dispersion`** (version **0.3.0** — research software; pin `package_version` from JSON exports for reproducibility).
+Installable distribution name: **`registral-dispersion`** (Python package; canonical research tool name **Registral_Dispersion**; version **0.3.0** — research software; pin `package_version` and `canonical_tool_name` from JSON exports for reproducibility).
 
 **Scope:** symbolic-score-only registral dispersion (MusicXML, MXL, MIDI via music21). **Not** audio, loudness, timbre, orchestration, harmony, pitch-class analysis, or psychoacoustic perception. For precise definitions, formulas, and interpretive limits of each metric, see **[docs/METRIC_SEMANTICS.md](docs/METRIC_SEMANTICS.md)**.
 
