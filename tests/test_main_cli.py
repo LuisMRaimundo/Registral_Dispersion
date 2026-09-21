@@ -41,6 +41,7 @@ def test_analyze_help_exits_cleanly(monkeypatch: pytest.MonkeyPatch, capsys: pyt
     assert exc_info.value.code == 0
     out = capsys.readouterr().out
     assert "--score" in out
+    assert "--microtone-repair" in out
     assert "analyze" in out.lower()
 
 

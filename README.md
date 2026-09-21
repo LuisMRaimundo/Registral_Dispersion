@@ -39,6 +39,7 @@ The **default** research stance is **`analysis_profile: occupied_space`** (impli
 | `analysis_profile` | **`occupied_space`** | Density-independent occupied pitch-space geometry. |
 | `pitch_sampling_mode` (if not overridden) | **`unique_pitch_heights`** | Implied by `occupied_space` via `resolve_registral_dispersion_params`. |
 | `observation_mode` | **`fixed_window`** | Moving windows: `time_step` + `window_size`. |
+| `microtone_repair` | **`off`** | Leave imported `<alter>` unchanged. `warn` / `from_accidentals` for Sibelius-style glyph-only quarter-tones. |
 | Register band | **A0 to C8 (full notated range)** preset in UI | Parsed to MIDI ps; **results depend on this band**. |
 | Primary outputs | **Raw semitones** | **`dispersion_degree`** (canonical; numerically = `registral_span`), `mean_pairwise_registral_distance` (supplementary). |
 | Secondary outputs | **`normalized_*`** | Raw ÷ `R = register_high_midi − register_low_midi`. |
@@ -122,7 +123,7 @@ So **sustained** notes count in every overlapped window, not only when an attack
   * **`event_instances`** (`component_weighted`) — keep every in-register MIDI value contributed by overlapping events (chord tones separately; **duplicated unisons across parts** and **repeated noteheads** count as multiple components).
   * **`unique_pitch_heights`** (`occupied_space`) — collapse to **distinct MIDI pitch numbers** within the window, then compute span, pairwise mean, and occupancy entropy. `active_note_count` is the length **after** this collapse.
 
-Exports (CSV comment lines and JSON) record **`analysis_profile`**, **`pitch_sampling_mode`**, **`pitch_sampling_source`**, **`observation_mode`**, register bounds and width, **`normalization_reference`**, explicit **formula / methodological** strings, and **`package_version`** / **`tool_role`** (JSON schema **1.8**) for reproducibility.
+Exports (CSV comment lines and JSON) record **`analysis_profile`**, **`pitch_sampling_mode`**, **`pitch_sampling_source`**, **`observation_mode`**, **`microtone_repair`**, register bounds and width, **`normalization_reference`**, explicit **formula / methodological** strings, and **`package_version`** / **`tool_role`** (JSON schema **1.9**) for reproducibility.
 
 ## Install
 
@@ -142,7 +143,7 @@ python -m pytest tests -q
 python -m pytest tests -q --cov=registral_dispersion --cov-report=term-missing
 ```
 
-Typical full suite: **236 passed** (2026-06-10).
+Typical full suite: **245 passed** (2026-09-21).
 
 ## Run (Gradio UI)
 
@@ -178,7 +179,7 @@ python -m registral_dispersion analyze --score path/to/score.musicxml --analysis
 python -m registral_dispersion analyze --score path/to/score.musicxml --observation-mode event_boundaries --out-dir ./out
 ```
 
-Options: `--register-low`, `--register-high`, `--time-step`, `--window-size`, `--prefix`, `--plot-pairwise` (or deprecated `--plot-span`), `--plot-entropy`, `--plot-normalized` (y-axis in 1/R units), `--tie-policy` (`as_imported` | `merge_ties`), `--analysis-profile` (`occupied_space` | `component_weighted`), optional `--pitch-sampling` (overrides profile if set), `--observation-mode` (`fixed_window` | `event_boundaries`). PNG primary curve = **`dispersion_degree`**; pairwise is overlay only.
+Options: `--register-low`, `--register-high`, `--time-step`, `--window-size`, `--prefix`, `--plot-pairwise` (or deprecated `--plot-span`), `--plot-entropy`, `--plot-normalized` (y-axis in 1/R units), `--tie-policy` (`as_imported` | `merge_ties`), `--analysis-profile` (`occupied_space` | `component_weighted`), optional `--pitch-sampling` (overrides profile if set), `--observation-mode` (`fixed_window` | `event_boundaries`), `--microtone-repair` (`off` | `warn` | `from_accidentals`). PNG primary curve = **`dispersion_degree`**; pairwise is overlay only.
 
 ## Batch export (dispersion)
 
@@ -221,6 +222,7 @@ out = run_registral_dispersion_analysis("score.xml", {
     "register_low": "A0",
     "register_high": "C8",
     "observation_mode": "fixed_window",  # default; use "event_boundaries" for score-state intervals
+    # "microtone_repair": "from_accidentals",  # Sibelius glyph-only quarter-tones
 })
 print(out["params"]["analysis_profile"], out["params"]["pitch_sampling_mode"])
 
@@ -239,7 +241,7 @@ Every successful `run_registral_dispersion_analysis` call now includes `out["glo
 | **`event_boundaries`** | Duration-weighted over intervals (skips NaN / empty rows) | `duration_weighted_registral_span`, `duration_weighted_mean_pairwise_registral_distance`, … |
 | **`fixed_window`** | Sampled trajectory summary (windows overlap; **not** duration states) | `sampled_mean_registral_span`, `sampled_max_registral_span`, … |
 
-JSON exports (schema **1.8**) include `global_summary`, `warnings`, `tie_policy`, and `symbolic_score_only: true`.  
+JSON exports (schema **1.9**) include `global_summary`, `warnings`, `tie_policy`, `microtone_repair`, `repairs`, and `symbolic_score_only: true`.  
 Batch `analyze` also writes `{prefix}_global_summary.csv` (key/value, separate from per-row CSV).
 
 ## One-number API and CLI (recommended for a single score metric)
@@ -291,9 +293,24 @@ MusicXML (`.xml`, `.musicxml`), MXL, MIDI (`.mid`, `.midi`); MXL zip safety chec
 
 `REGISTRAL_DISPERSION_CACHE_DIR` (also accepts `REGISTER_UNIFORMITY_CACHE_DIR`, `HOMOGENEITY_CACHE_DIR` — **legacy env names only**, not separate tools).
 
+## Microtonal files exported from Sibelius
+
+Some MusicXML exporters (notably **Sibelius 8**) write quarter-tone accidentals as **glyphs only**: `<accidental>quarter-sharp</accidental>` with `<alter>0</alter>`, and `<accidental>three-quarters-sharp</accidental>` with `<alter>1</alter>`. music21 then keeps the glyph name (`half-sharp` / `one-and-a-half-sharp`) but an **integer** `accidental.alter`, so `pitch.ps` is chromatic and the quarter-tone is lost.
+
+`microtone_repair` (default **`off`**) controls an import-time step that runs **before** tie stripping:
+
+| Mode | Behaviour |
+|------|-----------|
+| **`off`** | Current / historical behaviour: use the imported `<alter>`. Frozen benchmarks stay identical. |
+| **`warn`** | Detect glyph/`<alter>` mismatches; do not change pitches; emit one warning with the mismatch count. |
+| **`from_accidentals`** | Rewrite each mismatched accidental from its glyph name (`music21.pitch.Accidental(name)`), then propagate the repaired alter through the measure (same part/staff/step/octave until a new accidental or barline) and along ties. |
+
+MIDI has no accidental glyphs; `microtone_repair` never rewrites MIDI and warns that pitch-bend is ignored. API: `microtone_repair` in `resolve_registral_dispersion_params`. CLI: `--microtone-repair`. Recorded in JSON/CSV as `microtone_repair`; applied repairs are listed in `repairs`.
+
 ## Limitations
 
 * **Symbolic notation only** (MusicXML, MXL, MIDI via **music21**): **no audio analysis**, no performance timing beyond notated durations.
+* **MIDI** stores integer key numbers only; pitch-bend is ignored. Use MusicXML/MXL for quarter-tones, and `microtone_repair='from_accidentals'` when the file is a Sibelius-style glyph-only export.
 * **No dynamics**, **no orchestration weighting**, **no automatic layer or staff detection**, **no psychoacoustic models**.
 * **Tie behavior:** default **`tie_policy=as_imported`**. Use **`merge_ties`** to collapse tied segments via music21 `stripTies()` before analysis; record `tie_policy` in exports.
 * **Numerical results depend on** the chosen **register band**, **`analysis_profile` / `pitch_sampling_mode`**, and **`observation_mode`** (fixed-window grid vs event-boundary segmentation).

@@ -29,6 +29,12 @@ from registral_dispersion.sampling import (
     PITCH_SAMPLING_UNIQUE_PITCH_HEIGHTS,
     normalize_pitch_sampling_mode,
 )
+from registral_dispersion.microtone_repair import (
+    DEFAULT_MICROTONEREPAIR,
+    apply_microtone_repair,
+    is_midi_score_path,
+    normalize_microtone_repair,
+)
 from registral_dispersion.score_io import parse_score
 from registral_dispersion.visual_theme import (
     ACCENT_GOLD,
@@ -217,6 +223,7 @@ def build_registral_concentration_matrix(
     *,
     time_bin_size: float = DEFAULT_TIME_BIN_SIZE,
     concentration_mode: str = DEFAULT_CONCENTRATION_MODE,
+    microtone_repair: str = DEFAULT_MICROTONEREPAIR,
 ) -> dict[str, Any]:
     """
     Build ``pitch_rows × time_bins`` matrix of symbolic occupancy counts.
@@ -231,7 +238,20 @@ def build_registral_concentration_matrix(
     """
     if time_bin_size <= 0:
         raise ValueError("time_bin_size must be positive.")
-    sc = parse_score(score) if isinstance(score, str) else score
+    if isinstance(score, str):
+        sc = parse_score(score)
+        sc, _, _ = apply_microtone_repair(
+            sc,
+            normalize_microtone_repair(microtone_repair),
+            is_midi=is_midi_score_path(score),
+        )
+    else:
+        sc = score
+        sc, _, _ = apply_microtone_repair(
+            sc,
+            normalize_microtone_repair(microtone_repair),
+            is_midi=False,
+        )
     flat = sc.flatten()
     events = list(flat.notes)
     end_time = float(max(sc.highestTime, flat.highestTime))

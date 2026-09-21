@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **`microtone_repair`** (`off` default | `warn` | `from_accidentals`): detect and optionally repair MusicXML accidental glyphs whose `<alter>` does not match the glyph (Sibelius 8 quarter-sharp / three-quarters-sharp). Repair runs before tie stripping; measure- and tie-inheritance of the repaired alter is applied. MIDI is never rewritten. CLI `--microtone-repair`, Gradio control, `repairs` in the analysis result. Default `off` leaves all frozen benchmark numbers unchanged.
+- **JSON schema 1.9:** `microtone_repair` in parameters / score metadata / CSV comments; `repairs` array on successful exports.
 - GitHub repository renamed to **Registral_Dispersion** (`LuisMRaimundo/Registral_Dispersion`); documentation and installer URLs updated.
 - Canonical research tool name **Registral_Dispersion** applied across documentation, UI, exports (`canonical_tool_name`), and launchers. Legacy aliases (`register_uniformity`, homogeneity cache env vars) retained for backward compatibility only.
 

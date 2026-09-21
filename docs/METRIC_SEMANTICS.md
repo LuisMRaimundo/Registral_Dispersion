@@ -19,7 +19,7 @@ They are **not**:
 
 The tool measures **how notated or parsed pitch events occupy and distribute themselves across register** within user-defined temporal supports (moving windows or event-boundary intervals) and within a user-defined registral band `[register_low, register_high]`.
 
-Every export should record **`analysis_profile`**, **`pitch_sampling_mode`**, **`observation_mode`**, **`tie_policy`**, register bounds, and **`symbolic_score_only: true`** (JSON schema 1.8) so results remain reproducible and interpretable.
+Every export should record **`analysis_profile`**, **`pitch_sampling_mode`**, **`observation_mode`**, **`tie_policy`**, **`microtone_repair`**, register bounds, and **`symbolic_score_only: true`** (JSON schema 1.9) so results remain reproducible and interpretable.
 
 ---
 
@@ -228,6 +228,18 @@ Tie choice changes **which objects** exist in the flat stream and therefore sust
 
 Implied by **`analysis_profile`** unless an explicit `pitch_sampling_mode` key overrides (`pitch_sampling_source` recorded in exports).
 
+### `microtone_repair`
+
+Import-time handling of MusicXML accidental glyphs whose stored `<alter>` does not match the glyph name (Sibelius 8: `quarter-sharp` + `<alter>0</alter>`, `three-quarters-sharp` + `<alter>1</alter>`).
+
+| Mode | Effect |
+|------|--------|
+| **`off`** (default) | Use music21's imported `pitch.ps` (integer when `<alter>` is integer). |
+| **`warn`** | Detect mismatches; do not rewrite; one warning with the count `N`. |
+| **`from_accidentals`** | Set `pitch.accidental = Accidental(name)` (keep `displayStatus`) for each mismatch, then propagate the repaired alter in-measure and across ties. |
+
+MIDI is never rewritten. Applied edits are listed in export field `repairs`. Values are not comparable across modes for the same glyph-only file.
+
 ### `register_low` / `register_high`
 
 - Parsed to MIDI **`pitch.ps`** (note names or numeric).
@@ -298,8 +310,9 @@ Used **together**, the metrics can support discussion of:
 - **No spectral density** or timbral density.
 - **No perceptual validation** — normalized values are **not** psychoacoustic units.
 - **No orchestration-weighted acoustic model** unless you implement one externally.
-- **Symbolic parsing quality** depends on MusicXML/MXL/MIDI encoding and **music21** import (transposition, ties, divisi, percussion spelling).
-- **Transposition, tie, sampling, and register assumptions** must be documented per analysis from export metadata (`tie_policy`, `pitch_sampling_source`, `observation_mode`, bounds, `package_version`).
+- **Symbolic parsing quality** depends on MusicXML/MXL/MIDI encoding and **music21** import (transposition, ties, divisi, percussion spelling). Some exporters (Sibelius 8) write microtonal **glyphs** with an integer `<alter>`; default `microtone_repair='off'` then yields integer `pitch.ps`. Use `from_accidentals` to restore the glyph inflection, or `warn` to detect the mismatch without changing numbers.
+- **MIDI** cannot recover quarter-tones (pitch-bend is ignored); `microtone_repair` does not rewrite MIDI.
+- **Transposition, tie, sampling, and register assumptions** must be documented per analysis from export metadata (`tie_policy`, `pitch_sampling_source`, `observation_mode`, `microtone_repair`, bounds, `package_version`).
 
 ---
 

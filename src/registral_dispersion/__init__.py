@@ -43,6 +43,14 @@ from registral_dispersion.service import (
     run_registral_dispersion_analysis,
 )
 from registral_dispersion.summarize import DEFAULT_SUMMARIZE_PARAMS, summarize_registral_dispersion
+from registral_dispersion.microtone_repair import (
+    DEFAULT_MICROTONEREPAIR,
+    MICROTONEREPAIR_FROM_ACCIDENTALS,
+    MICROTONEREPAIR_OFF,
+    MICROTONEREPAIR_WARN,
+    detect_accidental_alter_mismatch,
+    normalize_microtone_repair,
+)
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY, TIE_POLICY_AS_IMPORTED, TIE_POLICY_MERGE_TIES
 
 __all__ = [
@@ -53,7 +61,11 @@ __all__ = [
     "DEFAULT_REGISTER_UNIFORMITY_PARAMS",
     "DEFAULT_REGISTRAL_DISPERSION_PARAMS",
     "DEFAULT_SUMMARIZE_PARAMS",
+    "DEFAULT_MICROTONEREPAIR",
     "DEFAULT_TIE_POLICY",
+    "MICROTONEREPAIR_FROM_ACCIDENTALS",
+    "MICROTONEREPAIR_OFF",
+    "MICROTONEREPAIR_WARN",
     "PITCH_SAMPLING_EVENT_INSTANCES",
     "PITCH_SAMPLING_UNIQUE_PITCH_HEIGHTS",
     "TIE_POLICY_AS_IMPORTED",
@@ -61,8 +73,10 @@ __all__ = [
     "RegisterUniformityAnalyzer",
     "RegistralDispersionAnalyzer",
     "compute_global_summary",
+    "detect_accidental_alter_mismatch",
     "implied_pitch_sampling_mode",
     "normalize_analysis_profile",
+    "normalize_microtone_repair",
     "normalize_pitch_sampling_mode",
     "resolve_registral_dispersion_params",
     "run_register_uniformity_analysis",

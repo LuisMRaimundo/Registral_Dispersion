@@ -56,6 +56,7 @@ from registral_dispersion.profiles import (
     normalize_analysis_profile,
 )
 from registral_dispersion.sampling import PITCH_SAMPLING_MODES
+from registral_dispersion.microtone_repair import DEFAULT_MICROTONEREPAIR
 from registral_dispersion.service import run_registral_dispersion_analysis
 from registral_dispersion.ui_validation import coerce_float, validate_uploaded_score
 from registral_dispersion.visual_theme import GRADIO_THEME_CSS
@@ -93,6 +94,7 @@ def _render_concentration_figure(
     display_normalization: str = DEFAULT_DISPLAY_NORMALIZATION,
     colormap_name: str = DEFAULT_COLORMAP,
     interactive_plot: bool = True,
+    microtone_repair: str = DEFAULT_MICROTONEREPAIR,
 ):
     """Build concentration matrix + figure; return (fig, bundle, plot_export_path)."""
     rlo = _parse_register_limit(register_low)
@@ -110,6 +112,7 @@ def _render_concentration_figure(
             rhi,
             time_bin_size=dt,
             concentration_mode=mode,
+            microtone_repair=microtone_repair,
         )
     except ValueError as exc:
         raise gr.Error(str(exc)) from exc
@@ -147,6 +150,7 @@ def run_dispersion_ui(
     analysis_profile=None,
     observation_mode=None,
     pitch_sampling_override=None,
+    microtone_repair=None,
     interactive_plot=None,
     show_registral_span=None,
     show_occupancy_entropy=None,
@@ -178,6 +182,11 @@ def run_dispersion_ui(
         "register_high": str(register_high).strip(),
         "analysis_profile": ap,
         "observation_mode": obs,
+        "microtone_repair": (
+            str(microtone_repair).strip()
+            if microtone_repair not in (None, "")
+            else DEFAULT_MICROTONEREPAIR
+        ),
     }
     ovr = pitch_sampling_override if pitch_sampling_override is not None else _PITCH_OVERRIDE_FOLLOW_PROFILE
     ovr_s = str(ovr).strip()
@@ -230,6 +239,7 @@ def run_dispersion_ui(
         register_low_midi=float(an.register_low),
         register_high_midi=float(an.register_high),
         register_width_semitones=float(an.register_width_semitones),
+        microtone_repair=rp.get("microtone_repair"),
     )
     json_path = new_export_path("dispersion_data_", ".json")
     write_json_export(json_path, build_registral_dispersion_export(score_path, rp, out))
@@ -250,6 +260,7 @@ def run_dispersion_ui(
             display_normalization=str(heatmap_normalization or DEFAULT_DISPLAY_NORMALIZATION),
             colormap_name=str(heatmap_colormap or DEFAULT_COLORMAP),
             interactive_plot=interactive_plot,
+            microtone_repair=str(rp.get("microtone_repair") or DEFAULT_MICROTONEREPAIR),
         )
         heat_matrix_path = new_export_path("concentration_matrix_", ".csv")
         write_concentration_matrix_csv(heat_matrix_path, heat_bundle)
@@ -446,6 +457,15 @@ def build_demo() -> gr.Blocks:
                     value=_PITCH_OVERRIDE_FOLLOW_PROFILE,
                     label="Pitch sampling override (optional)",
                 )
+                microtone_repair_u = gr.Radio(
+                    choices=[
+                        ("off — keep imported <alter> (default)", "off"),
+                        ("warn — detect Sibelius-style glyph/<alter> mismatches", "warn"),
+                        ("from_accidentals — repair quarter-tones from the accidental glyph", "from_accidentals"),
+                    ],
+                    value=DEFAULT_MICROTONEREPAIR,
+                    label="Microtone repair (MusicXML accidental glyphs)",
+                )
                 show_span_in = gr.Checkbox(
                     value=False,
                     label="Overlay mean pairwise distance (secondary axis)",
@@ -536,6 +556,7 @@ def build_demo() -> gr.Blocks:
                 analysis_profile_u,
                 observation_mode_u,
                 pitch_override_u,
+                microtone_repair_u,
                 interactive_u,
                 show_span_in,
                 show_entropy_in,

@@ -20,7 +20,8 @@ All values below assume **MusicXML / MXL / MIDI** input parsed by **music21**. R
 | **Register preset** | **A0–C8 (full notated range)** | Results depend on the band. Normalized columns scale by `R = register_high − register_low`. |
 | **Raw vs normalized** | **Raw semitones** for primary publication; **normalized_*** for cross-score comparison with different register bounds | Normalized values are **not** perceptual brightness. |
 | **Heatmap (complement)** | Always include when exploring register **notational occupancy** (informal “density”) | Independent of dispersion formulas; use **registral_ember** + **log1p_counts**. See [METRIC_SEMANTICS.md](METRIC_SEMANTICS.md) §7. |
-| **Exports** | Always keep **CSV + JSON** | JSON records `analysis_profile`, `pitch_sampling_mode`, `observation_mode`, formulas, and `package_version`. |
+| **Exports** | Always keep **CSV + JSON** | JSON records `analysis_profile`, `pitch_sampling_mode`, `observation_mode`, `microtone_repair`, formulas, and `package_version`. |
+| **`microtone_repair`** | **`off`** | Leave imported `<alter>` unchanged (reproducible default). Use **`warn`** to detect Sibelius-style glyph/`<alter>` mismatches, or **`from_accidentals`** to restore quarter-tones from the accidental glyph before analysis. MIDI is never rewritten. |
 
 ### Analysis profile (choose one stance)
 
@@ -59,6 +60,7 @@ Each row describes a **fixed set of sounding pitches** — no moving-window blur
 | `register_high` | **`C8`** | Full notated range (high) |
 | `time_step` | **`0.25`** | Inert for segmentation; keep default for export compatibility |
 | `window_size` | **`4.0`** | Inert for segmentation; keep default for export compatibility |
+| `microtone_repair` | **`off`** | Keep unless the MusicXML is a Sibelius-style glyph-only quarter-tone export |
 
 ### Primary metrics to read (per interval)
 
@@ -131,6 +133,7 @@ python -m registral_dispersion analyze ^
   --register-high C8 ^
   --observation-mode event_boundaries ^
   --analysis-profile occupied_space ^
+  --microtone-repair off ^
   --plot-pairwise
 ```
 
@@ -193,6 +196,7 @@ Sliding windows produce a **continuous (sampled) trajectory** of vertical openin
 | `register_high` | **`C8`** | Full notated range (high) |
 | **`time_step`** | **`0.25`** qL | Standard grid: sixteenth-note at ♩=60; good balance detail / stability |
 | **`window_size`** | **`4.0`** qL | ~one bar at 4/4 ♩=60; smooths local texture without hiding bar-level change |
+| `microtone_repair` | **`off`** | Keep unless the MusicXML is a Sibelius-style glyph-only quarter-tone export |
 
 ### Alternative window sizes (same time_step)
 
@@ -260,6 +264,7 @@ python -m registral_dispersion analyze ^
   --time-step 0.25 ^
   --window-size 4.0 ^
   --analysis-profile occupied_space ^
+  --microtone-repair off ^
   --plot-pairwise
 ```
 
@@ -317,6 +322,7 @@ out = run_registral_dispersion_analysis("score.musicxml", params_moving)
 | `analysis_profile` | **`occupied_space`** |
 | `register_low` / `register_high` | **A0 / C8** |
 | `tie_policy` | **`as_imported`** (or **`merge_ties`** for tied scores) |
+| `microtone_repair` | **`off`** (or **`from_accidentals`** for Sibelius glyph-only quarter-tone MusicXML) |
 
 Primary: **`duration_weighted_registral_span`**. Secondary: **`duration_weighted_mean_pairwise_registral_distance`**.
 
@@ -352,9 +358,9 @@ Then treat **`mean_pairwise_registral_distance`** as primary in both setups.
 2. Archive **exact parameter dict** (this document + your score path).  
 3. State **register band** and **profile** in the paper methods section.  
 4. Distinguish **dispersion metrics** from **occupancy_entropy** and from **concentration-map notational occupancy** (not acoustic density). See [METRIC_SEMANTICS.md](METRIC_SEMANTICS.md).  
-5. Record **`tie_policy`**, **`global_summary`**, and any **`warnings`** from JSON export.  
+5. Record **`tie_policy`**, **`microtone_repair`**, **`global_summary`**, and any **`warnings`** / **`repairs`** from JSON export.  
 6. Run **`benchmarks/scripts/compare_frozen_outputs.py`** after intentional code changes (synthetic fixtures only).
 
 ---
 
-*Document version: 2026-06-03 — matches Registral_Dispersion / registral-dispersion 0.3.0 (plotting: primary `dispersion_degree`; JSON schema 1.8).*
+*Document version: 2026-09-21 — matches Registral_Dispersion / registral-dispersion 0.3.0 (plotting: primary `dispersion_degree`; JSON schema 1.9; `microtone_repair`).*

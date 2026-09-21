@@ -9,6 +9,7 @@ from registral_dispersion.observation import OBSERVATION_MODE_EVENT_BOUNDARIES
 from registral_dispersion.pitch_utils import DEFAULT_REGISTER_HIGH, DEFAULT_REGISTER_LOW
 from registral_dispersion.profiles import DEFAULT_ANALYSIS_PROFILE
 from registral_dispersion.service import run_registral_dispersion_analysis
+from registral_dispersion.microtone_repair import DEFAULT_MICROTONEREPAIR
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY
 from registral_dispersion.warnings import collect_interpretation_warnings, merge_warnings
 
@@ -20,6 +21,7 @@ DEFAULT_SUMMARIZE_PARAMS: dict[str, Any] = {
     "time_step": 0.25,
     "window_size": 4.0,
     "tie_policy": DEFAULT_TIE_POLICY,
+    "microtone_repair": DEFAULT_MICROTONEREPAIR,
 }
 
 
@@ -46,6 +48,7 @@ def summarize_registral_dispersion(
             "global_summary": None,
             "params": out.get("params", merged),
             "warnings": merge_warnings(out.get("warnings")),
+            "repairs": list(out.get("repairs") or []),
         }
     global_summary = out.get("global_summary") or compute_global_summary(
         out["results"], out["params"], analyzer=out.get("analyzer")
@@ -63,5 +66,6 @@ def summarize_registral_dispersion(
         "global_summary": global_summary,
         "params": out["params"],
         "warnings": warnings,
+        "repairs": list(out.get("repairs") or []),
         "error": None,
     }

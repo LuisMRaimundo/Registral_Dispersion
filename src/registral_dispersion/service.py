@@ -24,6 +24,7 @@ from registral_dispersion.profiles import (
 )
 from registral_dispersion.results import RegistralDispersionSeriesResult
 from registral_dispersion.score_io import ScoreValidationError
+from registral_dispersion.microtone_repair import DEFAULT_MICROTONEREPAIR, normalize_microtone_repair
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY, normalize_tie_policy
 from registral_dispersion.warnings import collect_interpretation_warnings, merge_warnings
 
@@ -35,6 +36,7 @@ DEFAULT_REGISTRAL_DISPERSION_PARAMS = {
     "analysis_profile": DEFAULT_ANALYSIS_PROFILE,
     "observation_mode": "fixed_window",
     "tie_policy": DEFAULT_TIE_POLICY,
+    "microtone_repair": DEFAULT_MICROTONEREPAIR,
 }
 
 # Legacy register-uniformity / occupancy workflows: event-instance sampling (component_weighted).
@@ -65,6 +67,7 @@ def resolve_registral_dispersion_params(params: dict[str, Any] | None) -> dict[s
     p["pitch_sampling_source"] = src
     p["observation_mode"] = normalize_observation_mode(p.get("observation_mode"))
     p["tie_policy"] = normalize_tie_policy(p.get("tie_policy"))
+    p["microtone_repair"] = normalize_microtone_repair(p.get("microtone_repair"))
     return p
 
 
@@ -112,6 +115,7 @@ def _shared_run(
             pitch_sampling_mode=p["pitch_sampling_mode"] if explicit_pitch_sampling else None,
             analysis_profile=p["analysis_profile"],
             tie_policy=p["tie_policy"],
+            microtone_repair=p["microtone_repair"],
         )
     except ScoreValidationError as e:
         return {"error": str(e), "analyzer": None, "params": p}
@@ -150,7 +154,7 @@ def run_registral_dispersion_analysis(
     """
     base = _shared_run(score_path, params, progress_callback, RegistralDispersionAnalyzer)
     if base.get("error"):
-        return {**base, "summary": None, "global_summary": None, "warnings": []}
+        return {**base, "summary": None, "global_summary": None, "warnings": [], "repairs": []}
     p = base["params"]
     analyzer = base["analyzer"]
     results = RegistralDispersionSeriesResult.from_legacy(base["results_raw"]).as_legacy_dict()
@@ -160,8 +164,10 @@ def run_registral_dispersion_analysis(
     p["register_width_semitones"] = float(analyzer.register_width_semitones)
     warnings = merge_warnings(
         list(getattr(analyzer, "tie_warnings", []) or []),
+        list(getattr(analyzer, "microtone_warnings", []) or []),
         collect_interpretation_warnings(p, context="analysis"),
     )
+    repairs = list(getattr(analyzer, "repairs", []) or [])
     dd = np.array(results["dispersion_degree"], dtype=float)
     dp = np.array(results["mean_pairwise_registral_distance"], dtype=float)
     ds = np.array(results["registral_span"], dtype=float)
@@ -228,6 +234,7 @@ def run_registral_dispersion_analysis(
         "summary": summary,
         "global_summary": global_summary,
         "warnings": warnings,
+        "repairs": repairs,
         "error": None,
         "params": p,
     }
@@ -261,7 +268,7 @@ def run_register_uniformity_analysis(
         RegisterUniformityAnalyzer,
     )
     if base.get("error"):
-        return {**base, "summary": None}
+        return {**base, "summary": None, "repairs": []}
     p = base["params"]
     analyzer = base["analyzer"]
     results_raw = base["results_raw"]

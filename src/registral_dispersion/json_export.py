@@ -31,7 +31,7 @@ from registral_dispersion.sampling import normalize_pitch_sampling_mode
 from registral_dispersion.service import resolve_registral_dispersion_params
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY
 
-JSON_EXPORT_SCHEMA_VERSION = "1.8"
+JSON_EXPORT_SCHEMA_VERSION = "1.9"
 
 TOOL_SCOPE_STATEMENT = (
     "Symbolic-score-only registral dispersion tool. Analyzes MusicXML, MXL, and MIDI via music21. "
@@ -115,6 +115,7 @@ def write_registral_dispersion_csv(
     register_low_midi: float | None = None,
     register_high_midi: float | None = None,
     register_width_semitones: float | None = None,
+    microtone_repair: str | None = None,
 ) -> str:
     """
     Write one CSV row per window with leading ``#`` comment lines (metric definitions).
@@ -170,6 +171,7 @@ def write_registral_dispersion_csv(
         f"# {NOTATIONAL_SAMPLING_CSV_BLURB}",
         f"# {OBSERVATION_MODES_CSV_BLURB}",
         f"# observation_mode: {obs_line}",
+        f"# microtone_repair: {microtone_repair if microtone_repair is not None else 'off'}",
     ]
     if register_low_midi is not None and register_high_midi is not None and register_width_semitones is not None:
         lines.extend(
@@ -234,6 +236,7 @@ def build_registral_dispersion_export(
         "pitch_sampling_source": src or None,
         "observation_mode": obs_mode,
         "tie_policy": tie_pol,
+        "microtone_repair": str(resolved.get("microtone_repair") or "off"),
         "symbolic_score_only": True,
         "tool_scope_statement": TOOL_SCOPE_STATEMENT,
         "error": out.get("error"),
@@ -251,6 +254,7 @@ def build_registral_dispersion_export(
     base["results"] = to_json_serializable(out.get("results", {}))
     base["global_summary"] = to_json_serializable(out.get("global_summary"))
     base["warnings"] = to_json_serializable(out.get("warnings") or [])
+    base["repairs"] = to_json_serializable(out.get("repairs") or [])
     params_out = dict(resolved)
     if an is not None:
         params_out["register_low_midi_ps"] = float(getattr(an, "register_low", 0.0))
@@ -285,6 +289,7 @@ def build_registral_dispersion_export(
             "pitch_sampling_source": str(getattr(an, "pitch_sampling_source", src)),
             "observation_mode": obs_mode,
             "tie_policy": str(getattr(an, "tie_policy", tie_pol)),
+            "microtone_repair": str(getattr(an, "microtone_repair", resolved.get("microtone_repair") or "off")),
             "normalization_reference": NORMALIZATION_REFERENCE,
             "register_low_midi": rlo,
             "register_high_midi": rhi,

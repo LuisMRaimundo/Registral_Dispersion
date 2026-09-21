@@ -20,6 +20,11 @@ from registral_dispersion.profiles import (
     ANALYSIS_PROFILE_COMPONENT_WEIGHTED,
     resolve_profile_and_pitch_sampling,
 )
+from registral_dispersion.microtone_repair import (
+    apply_microtone_repair,
+    is_midi_score_path,
+    normalize_microtone_repair,
+)
 from registral_dispersion.sampling import normalize_pitch_sampling_mode
 from registral_dispersion.score_io import parse_score
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY, apply_tie_policy, normalize_tie_policy
@@ -83,9 +88,19 @@ class RegistralDispersionAnalyzer:
         pitch_sampling_mode: str | None = None,
         analysis_profile: str | None = None,
         tie_policy: str = DEFAULT_TIE_POLICY,
+        microtone_repair: str | None = None,
     ):
         self._score_path: str | None = score_path
         raw = parse_score(score_path)
+        repair_mode = normalize_microtone_repair(microtone_repair)
+        raw, repair_warnings, repairs = apply_microtone_repair(
+            raw,
+            repair_mode,
+            is_midi=is_midi_score_path(score_path),
+        )
+        self.microtone_repair = repair_mode
+        self.microtone_warnings = list(repair_warnings)
+        self.repairs = list(repairs)
         processed, tie_warnings = apply_tie_policy(raw, tie_policy)
         self.tie_policy = normalize_tie_policy(tie_policy)
         self.tie_warnings = list(tie_warnings)
@@ -108,11 +123,21 @@ class RegistralDispersionAnalyzer:
         pitch_sampling_mode: str | None = None,
         analysis_profile: str | None = None,
         tie_policy: str = DEFAULT_TIE_POLICY,
+        microtone_repair: str | None = None,
     ) -> RegistralDispersionAnalyzer:
         """Build an analyzer from an in-memory music21 stream (e.g. for tests)."""
         self = cls.__new__(cls)
         self._score_path = None
-        processed, tie_warnings = apply_tie_policy(score_stream, tie_policy)
+        repair_mode = normalize_microtone_repair(microtone_repair)
+        prepared, repair_warnings, repairs = apply_microtone_repair(
+            score_stream,
+            repair_mode,
+            is_midi=False,
+        )
+        self.microtone_repair = repair_mode
+        self.microtone_warnings = list(repair_warnings)
+        self.repairs = list(repairs)
+        processed, tie_warnings = apply_tie_policy(prepared, tie_policy)
         self.tie_policy = normalize_tie_policy(tie_policy)
         self.tie_warnings = list(tie_warnings)
         self._init_from_parsed_stream(
@@ -441,6 +466,7 @@ class RegisterUniformityAnalyzer(RegistralDispersionAnalyzer):
         pitch_sampling_mode: str | None = None,
         analysis_profile: str | None = None,
         tie_policy: str = DEFAULT_TIE_POLICY,
+        microtone_repair: str | None = None,
     ):
         prof = ANALYSIS_PROFILE_COMPONENT_WEIGHTED if analysis_profile is None else analysis_profile
         super().__init__(
@@ -451,6 +477,7 @@ class RegisterUniformityAnalyzer(RegistralDispersionAnalyzer):
             pitch_sampling_mode,
             analysis_profile=prof,
             tie_policy=tie_policy,
+            microtone_repair=microtone_repair,
         )
 
     def analyze_score(self, window_size: float, progress_callback=None, **_kwargs):

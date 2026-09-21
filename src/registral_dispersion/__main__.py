@@ -15,6 +15,7 @@ from registral_dispersion.json_export import (
     write_json_export,
     write_registral_dispersion_csv,
 )
+from registral_dispersion.microtone_repair import DEFAULT_MICROTONEREPAIR
 from registral_dispersion.pitch_utils import DEFAULT_REGISTER_HIGH, DEFAULT_REGISTER_LOW
 from registral_dispersion.plotting import make_dispersion_figure
 from registral_dispersion.profiles import DEFAULT_ANALYSIS_PROFILE
@@ -53,6 +54,16 @@ def _add_common_analysis_args(parser: argparse.ArgumentParser) -> None:
         default=DEFAULT_TIE_POLICY,
         choices=["as_imported", "merge_ties"],
     )
+    parser.add_argument(
+        "--microtone-repair",
+        dest="microtone_repair",
+        default=DEFAULT_MICROTONEREPAIR,
+        choices=["off", "warn", "from_accidentals"],
+        help=(
+            "Repair MusicXML accidental glyphs whose <alter> does not match the glyph "
+            "(Sibelius-style quarter-tones). Default: off."
+        ),
+    )
 
 
 def _run_params_from_args(args: argparse.Namespace, *, default_observation_mode: str) -> dict:
@@ -64,6 +75,7 @@ def _run_params_from_args(args: argparse.Namespace, *, default_observation_mode:
         "analysis_profile": args.analysis_profile,
         "observation_mode": args.observation_mode or default_observation_mode,
         "tie_policy": args.tie_policy,
+        "microtone_repair": getattr(args, "microtone_repair", DEFAULT_MICROTONEREPAIR),
     }
     if args.pitch_sampling_mode is not None:
         run_params["pitch_sampling_mode"] = args.pitch_sampling_mode
@@ -96,6 +108,7 @@ def _cli_analyze(args: argparse.Namespace) -> int:
         register_low_midi=float(an.register_low),
         register_high_midi=float(an.register_high),
         register_width_semitones=float(an.register_width_semitones),
+        microtone_repair=rp.get("microtone_repair"),
     )
     write_json_export(json_path, build_registral_dispersion_export(args.score, rp, out))
     if out.get("global_summary"):
