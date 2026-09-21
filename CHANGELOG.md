@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Pitch inventory** and **`pitch_reference`** (`written` default | `sounding`): inspectable per-note table (written + sounding names/`ps`, flags, `used_in_metrics`) with a one-line digest; Gradio Load & inspect then Run analysis; editable `sounding_ps` / `used_in_metrics` and per-part extra transposition; overrides as `<score>.pitch_overrides.json`, CLI `--pitch-overrides` and `inventory` subcommand, API `params["pitch_overrides"]`. Sounding conversion uses a score copy and music21 `toSoundingPitch()` after microtone repair and before ties. Transposing parts are listed in `transposing_parts`; written mode warns that metrics are not concert pitch. Default `written` + empty overrides leaves frozen benchmark numbers unchanged.
+- **JSON schema 1.10:** `pitch_reference`, `transposing_parts`, `pitch_overrides`, `pitch_inventory_digest`. Batch `analyze` writes `{prefix}_pitch_inventory.csv`.
 - **`microtone_repair`** (`off` default | `warn` | `from_accidentals`): detect and optionally repair MusicXML accidental glyphs whose `<alter>` does not match the glyph (Sibelius 8 quarter-sharp / three-quarters-sharp). Repair runs before tie stripping; measure- and tie-inheritance of the repaired alter is applied. MIDI is never rewritten. CLI `--microtone-repair`, Gradio control, `repairs` in the analysis result. Default `off` leaves all frozen benchmark numbers unchanged.
 - **JSON schema 1.9:** `microtone_repair` in parameters / score metadata / CSV comments; `repairs` array on successful exports.
 - GitHub repository renamed to **Registral_Dispersion** (`LuisMRaimundo/Registral_Dispersion`); documentation and installer URLs updated.

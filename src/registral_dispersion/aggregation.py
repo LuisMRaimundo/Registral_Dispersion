@@ -14,7 +14,7 @@ from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY
 
 AGGREGATION_DURATION_WEIGHTED = "duration_weighted_event_boundaries"
 AGGREGATION_SAMPLED_FIXED = "sampled_fixed_window_summary"
-SUMMARY_SCHEMA_VERSION = "1.9"
+SUMMARY_SCHEMA_VERSION = "1.10"
 
 
 def _package_version() -> str:
@@ -123,6 +123,7 @@ def compute_global_summary(
         "observation_mode": obs,
         "tie_policy": p.get("tie_policy", DEFAULT_TIE_POLICY),
         "microtone_repair": p.get("microtone_repair", "off"),
+        "pitch_reference": p.get("pitch_reference", "written"),
         "register_low": p.get("register_low"),
         "register_high": p.get("register_high"),
         "normalization_reference": NORMALIZATION_REFERENCE,

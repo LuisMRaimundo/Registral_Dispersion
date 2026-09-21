@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1">
+  <part-list>
+    <score-part id="P1"><part-name>Horn in F</part-name></score-part>
+    <score-part id="P2"><part-name>Trombone</part-name></score-part>
+    <score-part id="P3"><part-name>Tuba</part-name></score-part>
+    <score-part id="P4"><part-name>Bass Drum</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+        <transpose>
+          <diatonic>-4</diatonic>
+          <chromatic>-7</chromatic>
+        </transpose>
+      </attributes>
+      <note>
+        <pitch><step>F</step><alter>1</alter><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>C</step><alter>1</alter><octave>4</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>A</step><alter>-1</alter><octave>4</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>B</step><alter>-1</alter><octave>1</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>E</step><octave>2</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>F</step><octave>2</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+  <part id="P3">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>A</step><octave>1</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+  <part id="P4">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>percussion</sign></clef>
+      </attributes>
+      <note>
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>4</duration>
+        <type>whole</type>
+        <instrument id="P4-I1"/>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

@@ -25,6 +25,8 @@ from registral_dispersion.microtone_repair import (
     is_midi_score_path,
     normalize_microtone_repair,
 )
+from registral_dispersion.pitch_inventory import excluded_indices, prepare_score_for_analysis
+from registral_dispersion.pitch_reference import normalize_pitch_reference
 from registral_dispersion.sampling import normalize_pitch_sampling_mode
 from registral_dispersion.score_io import parse_score
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY, apply_tie_policy, normalize_tie_policy
@@ -77,6 +79,13 @@ class RegistralDispersionAnalyzer:
       music21 ``stripTies()`` before event listing. Otherwise the flat stream may contain one long ``Note``
       or several tied segments depending on the file and import; each overlapping object contributes
       according to the rules above.
+
+    **Pitch pipeline (order of operations)**
+
+    parse → microtone repair → sounding conversion (if ``pitch_reference='sounding'``) →
+    part-level overrides → note-level overrides → tie policy → event listing → metrics.
+
+    Default ``pitch_reference='written'`` keeps historical / frozen-benchmark numbers.
     """
 
     def __init__(
@@ -89,6 +98,8 @@ class RegistralDispersionAnalyzer:
         analysis_profile: str | None = None,
         tie_policy: str = DEFAULT_TIE_POLICY,
         microtone_repair: str | None = None,
+        pitch_reference: str | None = None,
+        pitch_overrides: list | None = None,
     ):
         self._score_path: str | None = score_path
         raw = parse_score(score_path)
@@ -101,7 +112,16 @@ class RegistralDispersionAnalyzer:
         self.microtone_repair = repair_mode
         self.microtone_warnings = list(repair_warnings)
         self.repairs = list(repairs)
-        processed, tie_warnings = apply_tie_policy(raw, tie_policy)
+        prepared = prepare_score_for_analysis(
+            raw,
+            pitch_reference=pitch_reference,
+            pitch_overrides=pitch_overrides,
+            register_low_ps=register_low_ps,
+            register_high_ps=register_high_ps,
+            repairs=repairs,
+        )
+        self._store_pitch_layer(prepared)
+        processed, tie_warnings = apply_tie_policy(prepared.score, tie_policy)
         self.tie_policy = normalize_tie_policy(tie_policy)
         self.tie_warnings = list(tie_warnings)
         self._init_from_parsed_stream(
@@ -124,12 +144,14 @@ class RegistralDispersionAnalyzer:
         analysis_profile: str | None = None,
         tie_policy: str = DEFAULT_TIE_POLICY,
         microtone_repair: str | None = None,
+        pitch_reference: str | None = None,
+        pitch_overrides: list | None = None,
     ) -> RegistralDispersionAnalyzer:
         """Build an analyzer from an in-memory music21 stream (e.g. for tests)."""
         self = cls.__new__(cls)
         self._score_path = None
         repair_mode = normalize_microtone_repair(microtone_repair)
-        prepared, repair_warnings, repairs = apply_microtone_repair(
+        repaired, repair_warnings, repairs = apply_microtone_repair(
             score_stream,
             repair_mode,
             is_midi=False,
@@ -137,7 +159,16 @@ class RegistralDispersionAnalyzer:
         self.microtone_repair = repair_mode
         self.microtone_warnings = list(repair_warnings)
         self.repairs = list(repairs)
-        processed, tie_warnings = apply_tie_policy(prepared, tie_policy)
+        prepared = prepare_score_for_analysis(
+            repaired,
+            pitch_reference=pitch_reference,
+            pitch_overrides=pitch_overrides,
+            register_low_ps=register_low_ps,
+            register_high_ps=register_high_ps,
+            repairs=repairs,
+        )
+        self._store_pitch_layer(prepared)
+        processed, tie_warnings = apply_tie_policy(prepared.score, tie_policy)
         self.tie_policy = normalize_tie_policy(tie_policy)
         self.tie_warnings = list(tie_warnings)
         self._init_from_parsed_stream(
@@ -149,6 +180,14 @@ class RegistralDispersionAnalyzer:
             analysis_profile,
         )
         return self
+
+    def _store_pitch_layer(self, prepared) -> None:
+        self.pitch_reference = normalize_pitch_reference(prepared.pitch_reference)
+        self.pitch_overrides = list(prepared.pitch_overrides)
+        self.pitch_inventory = list(prepared.inventory)
+        self.pitch_inventory_digest = dict(prepared.digest)
+        self.transposing_parts = list(prepared.transposing_parts)
+        self.pitch_warnings = list(prepared.warnings)
 
     def _init_from_parsed_stream(
         self,
@@ -196,12 +235,19 @@ class RegistralDispersionAnalyzer:
         active = [e for e in self.events if self._active_in_window(e, t_start, t_end)]
         pitches: list[float] = []
         for e in active:
+            skip = excluded_indices(e)
+            if isinstance(e, m21_note.Unpitched):
+                continue
             if isinstance(e, m21_note.Note):
+                if 0 in skip:
+                    continue
                 ps = float(e.pitch.ps)
                 if self.register_low <= ps <= self.register_high:
                     pitches.append(ps)
             elif isinstance(e, m21_chord.Chord):
-                for p in e.pitches:
+                for i, p in enumerate(e.pitches):
+                    if i in skip:
+                        continue
                     ps = float(p.ps)
                     if self.register_low <= ps <= self.register_high:
                         pitches.append(ps)
@@ -467,6 +513,8 @@ class RegisterUniformityAnalyzer(RegistralDispersionAnalyzer):
         analysis_profile: str | None = None,
         tie_policy: str = DEFAULT_TIE_POLICY,
         microtone_repair: str | None = None,
+        pitch_reference: str | None = None,
+        pitch_overrides: list | None = None,
     ):
         prof = ANALYSIS_PROFILE_COMPONENT_WEIGHTED if analysis_profile is None else analysis_profile
         super().__init__(
@@ -478,6 +526,8 @@ class RegisterUniformityAnalyzer(RegistralDispersionAnalyzer):
             analysis_profile=prof,
             tie_policy=tie_policy,
             microtone_repair=microtone_repair,
+            pitch_reference=pitch_reference,
+            pitch_overrides=pitch_overrides,
         )
 
     def analyze_score(self, window_size: float, progress_callback=None, **_kwargs):

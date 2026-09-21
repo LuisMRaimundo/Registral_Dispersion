@@ -42,7 +42,18 @@ def test_analyze_help_exits_cleanly(monkeypatch: pytest.MonkeyPatch, capsys: pyt
     out = capsys.readouterr().out
     assert "--score" in out
     assert "--microtone-repair" in out
+    assert "--pitch-reference" in out
     assert "analyze" in out.lower()
+
+
+def test_inventory_help_exits_cleanly(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        _run_main(monkeypatch, _argv("inventory", "--help"))
+    assert exc_info.value.code == 0
+    out = capsys.readouterr().out
+    assert "--score" in out
+    assert "--pitch-reference" in out
+    assert "--out" in out
 
 
 def test_summarize_help_exits_cleanly(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
@@ -302,6 +313,7 @@ def test_cli_analyze_writes_outputs_with_explicit_dir_and_prefix(
     assert (out_dir / "cli_run.json").is_file()
     assert (out_dir / "cli_run.png").is_file()
     assert (out_dir / "cli_run_global_summary.csv").is_file()
+    assert (out_dir / "cli_run_pitch_inventory.csv").is_file()
     out = capsys.readouterr().out
     assert "Wrote" in out
     assert str(out_dir / "cli_run.csv") in out

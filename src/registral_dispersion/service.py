@@ -23,8 +23,20 @@ from registral_dispersion.profiles import (
     resolve_profile_and_pitch_sampling,
 )
 from registral_dispersion.results import RegistralDispersionSeriesResult
-from registral_dispersion.score_io import ScoreValidationError
-from registral_dispersion.microtone_repair import DEFAULT_MICROTONEREPAIR, normalize_microtone_repair
+from registral_dispersion.microtone_repair import (
+    DEFAULT_MICROTONEREPAIR,
+    apply_microtone_repair,
+    is_midi_score_path,
+    normalize_microtone_repair,
+)
+from registral_dispersion.pitch_inventory import (
+    inventory_digest_line,
+    prepare_score_for_analysis,
+    public_inventory_rows,
+)
+from registral_dispersion.score_io import ScoreValidationError, parse_score
+from registral_dispersion.pitch_overrides import normalize_pitch_overrides
+from registral_dispersion.pitch_reference import DEFAULT_PITCH_REFERENCE, normalize_pitch_reference
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY, normalize_tie_policy
 from registral_dispersion.warnings import collect_interpretation_warnings, merge_warnings
 
@@ -37,6 +49,8 @@ DEFAULT_REGISTRAL_DISPERSION_PARAMS = {
     "observation_mode": "fixed_window",
     "tie_policy": DEFAULT_TIE_POLICY,
     "microtone_repair": DEFAULT_MICROTONEREPAIR,
+    "pitch_reference": DEFAULT_PITCH_REFERENCE,
+    "pitch_overrides": [],
 }
 
 # Legacy register-uniformity / occupancy workflows: event-instance sampling (component_weighted).
@@ -68,6 +82,8 @@ def resolve_registral_dispersion_params(params: dict[str, Any] | None) -> dict[s
     p["observation_mode"] = normalize_observation_mode(p.get("observation_mode"))
     p["tie_policy"] = normalize_tie_policy(p.get("tie_policy"))
     p["microtone_repair"] = normalize_microtone_repair(p.get("microtone_repair"))
+    p["pitch_reference"] = normalize_pitch_reference(p.get("pitch_reference"))
+    p["pitch_overrides"] = normalize_pitch_overrides(p.get("pitch_overrides"))
     return p
 
 
@@ -116,6 +132,8 @@ def _shared_run(
             analysis_profile=p["analysis_profile"],
             tie_policy=p["tie_policy"],
             microtone_repair=p["microtone_repair"],
+            pitch_reference=p["pitch_reference"],
+            pitch_overrides=p["pitch_overrides"],
         )
     except ScoreValidationError as e:
         return {"error": str(e), "analyzer": None, "params": p}
@@ -154,7 +172,17 @@ def run_registral_dispersion_analysis(
     """
     base = _shared_run(score_path, params, progress_callback, RegistralDispersionAnalyzer)
     if base.get("error"):
-        return {**base, "summary": None, "global_summary": None, "warnings": [], "repairs": []}
+        return {
+            **base,
+            "summary": None,
+            "global_summary": None,
+            "warnings": [],
+            "repairs": [],
+            "pitch_inventory": [],
+            "pitch_inventory_digest": None,
+            "transposing_parts": [],
+            "pitch_overrides": list((base.get("params") or {}).get("pitch_overrides") or []),
+        }
     p = base["params"]
     analyzer = base["analyzer"]
     results = RegistralDispersionSeriesResult.from_legacy(base["results_raw"]).as_legacy_dict()
@@ -165,9 +193,14 @@ def run_registral_dispersion_analysis(
     warnings = merge_warnings(
         list(getattr(analyzer, "tie_warnings", []) or []),
         list(getattr(analyzer, "microtone_warnings", []) or []),
+        list(getattr(analyzer, "pitch_warnings", []) or []),
         collect_interpretation_warnings(p, context="analysis"),
     )
     repairs = list(getattr(analyzer, "repairs", []) or [])
+    pitch_inventory = list(getattr(analyzer, "pitch_inventory", []) or [])
+    pitch_inventory_digest = dict(getattr(analyzer, "pitch_inventory_digest", None) or {})
+    transposing_parts = list(getattr(analyzer, "transposing_parts", []) or [])
+    pitch_overrides = list(getattr(analyzer, "pitch_overrides", []) or [])
     dd = np.array(results["dispersion_degree"], dtype=float)
     dp = np.array(results["mean_pairwise_registral_distance"], dtype=float)
     ds = np.array(results["registral_span"], dtype=float)
@@ -226,6 +259,8 @@ def run_registral_dispersion_analysis(
         f"{win_line}"
         f"occupancy_entropy (optional) is distinct from dispersion; see README / JSON methodological_note.\n"
     )
+    if pitch_inventory_digest:
+        summary += f"Pitch inventory: {inventory_digest_line(pitch_inventory_digest)}\n"
     if warnings:
         summary += f"Warnings ({len(warnings)}): " + " | ".join(warnings) + "\n"
     return {
@@ -235,8 +270,70 @@ def run_registral_dispersion_analysis(
         "global_summary": global_summary,
         "warnings": warnings,
         "repairs": repairs,
+        "pitch_inventory": pitch_inventory,
+        "pitch_inventory_digest": pitch_inventory_digest,
+        "transposing_parts": transposing_parts,
+        "pitch_overrides": pitch_overrides,
         "error": None,
         "params": p,
+    }
+
+
+def inspect_score_pitches(score_path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    """
+    Parse, repair, convert, and return the pitch inventory without running metrics.
+
+    Used by Gradio step 1 (Load & inspect) and ``python -m registral_dispersion inventory``.
+    """
+    try:
+        p = resolve_registral_dispersion_params(params)
+    except ValueError as e:
+        return {"error": str(e), "pitch_inventory": [], "warnings": []}
+    try:
+        reg_low = _parse_register_bound(p.get("register_low"))
+        reg_high = _parse_register_bound(p.get("register_high"))
+    except ValueError as e:
+        return {"error": str(e), "pitch_inventory": [], "warnings": [], "params": p}
+    try:
+        raw = parse_score(score_path)
+    except ScoreValidationError as e:
+        return {"error": str(e), "pitch_inventory": [], "warnings": [], "params": p}
+    except Exception as e:
+        return {
+            "error": "Could not parse the score. Ensure the file is valid MusicXML or MIDI. Details: " + str(e),
+            "pitch_inventory": [],
+            "warnings": [],
+            "params": p,
+        }
+    raw, repair_warnings, repairs = apply_microtone_repair(
+        raw,
+        p["microtone_repair"],
+        is_midi=is_midi_score_path(score_path),
+    )
+    try:
+        prepared = prepare_score_for_analysis(
+            raw,
+            pitch_reference=p["pitch_reference"],
+            pitch_overrides=p.get("pitch_overrides"),
+            register_low_ps=reg_low,
+            register_high_ps=reg_high,
+            repairs=repairs,
+        )
+    except ValueError as e:
+        return {"error": str(e), "pitch_inventory": [], "warnings": [], "params": p}
+    warnings = merge_warnings(repair_warnings, prepared.warnings)
+    digest = dict(prepared.digest)
+    return {
+        "error": None,
+        "params": p,
+        "pitch_inventory": public_inventory_rows(prepared.inventory),
+        "pitch_inventory_raw": list(prepared.inventory),
+        "pitch_inventory_digest": digest,
+        "digest_line": inventory_digest_line(digest),
+        "transposing_parts": list(prepared.transposing_parts),
+        "pitch_overrides": list(prepared.pitch_overrides),
+        "warnings": warnings,
+        "repairs": list(repairs),
     }
 
 

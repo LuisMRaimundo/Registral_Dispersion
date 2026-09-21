@@ -57,7 +57,14 @@ from registral_dispersion.profiles import (
 )
 from registral_dispersion.sampling import PITCH_SAMPLING_MODES
 from registral_dispersion.microtone_repair import DEFAULT_MICROTONEREPAIR
-from registral_dispersion.service import run_registral_dispersion_analysis
+from registral_dispersion.pitch_inventory import INVENTORY_COLUMNS, write_pitch_inventory_csv
+from registral_dispersion.pitch_overrides import (
+    overrides_from_inventory_edits,
+    save_pitch_overrides,
+    sidecar_path_for_score,
+)
+from registral_dispersion.pitch_reference import DEFAULT_PITCH_REFERENCE
+from registral_dispersion.service import inspect_score_pitches, run_registral_dispersion_analysis
 from registral_dispersion.ui_validation import coerce_float, validate_uploaded_score
 from registral_dispersion.visual_theme import GRADIO_THEME_CSS
 
@@ -140,6 +147,73 @@ def _render_concentration_figure(
     return fig, bundle, plot_path
 
 
+def _records_from_df(df) -> list[dict]:
+    if df is None:
+        return []
+    if hasattr(df, "to_dict"):
+        return list(df.to_dict(orient="records"))
+    if isinstance(df, list):
+        return [dict(r) for r in df if isinstance(r, dict)]
+    return []
+
+
+def _parts_table_from_inventory(rows: list[dict]) -> list[dict]:
+    seen: dict[object, dict] = {}
+    for row in rows:
+        nid = str(row.get("note_id") or "")
+        try:
+            part_index = int(str(row.get("_part_index", nid.split(":")[0] if nid else 0)))
+        except (TypeError, ValueError):
+            part_index = 0
+        key = (part_index, row.get("part"), row.get("instrument"))
+        if key in seen:
+            continue
+        seen[key] = {
+            "part_index": part_index,
+            "part": row.get("part") or "",
+            "instrument": row.get("instrument") or "",
+            "extra_semitones": 0.0,
+        }
+    return list(seen.values())
+
+
+def load_inspect_ui(
+    file_obj=None,
+    register_low=None,
+    register_high=None,
+    pitch_reference=None,
+    microtone_repair=None,
+):
+    """Step 1: parse the score and show the editable pitch inventory."""
+    score_path = validate_uploaded_score(file_obj)
+    if not register_low or not str(register_low).strip():
+        raise gr.Error("Enter a lower register limit (e.g. A1 or MIDI number).")
+    if not register_high or not str(register_high).strip():
+        raise gr.Error("Enter an upper register limit (e.g. E7 or MIDI number).")
+    params = {
+        "register_low": str(register_low).strip(),
+        "register_high": str(register_high).strip(),
+        "pitch_reference": (
+            str(pitch_reference).strip()
+            if pitch_reference not in (None, "")
+            else DEFAULT_PITCH_REFERENCE
+        ),
+        "microtone_repair": (
+            str(microtone_repair).strip()
+            if microtone_repair not in (None, "")
+            else DEFAULT_MICROTONEREPAIR
+        ),
+    }
+    out = inspect_score_pitches(score_path, params)
+    if out.get("error"):
+        raise gr.Error(out["error"])
+    table = out.get("pitch_inventory") or []
+    parts = _parts_table_from_inventory(out.get("pitch_inventory_raw") or table)
+    warnings = "\n".join(out.get("warnings") or []) or "No warnings."
+    digest = out.get("digest_line") or ""
+    return table, digest, parts, warnings, table
+
+
 def run_dispersion_ui(
     progress=gr.Progress(),
     file_obj=None,
@@ -151,6 +225,10 @@ def run_dispersion_ui(
     observation_mode=None,
     pitch_sampling_override=None,
     microtone_repair=None,
+    pitch_reference=None,
+    inventory_df=None,
+    part_transpose_df=None,
+    inventory_original=None,
     interactive_plot=None,
     show_registral_span=None,
     show_occupancy_entropy=None,
@@ -187,7 +265,22 @@ def run_dispersion_ui(
             if microtone_repair not in (None, "")
             else DEFAULT_MICROTONEREPAIR
         ),
+        "pitch_reference": (
+            str(pitch_reference).strip()
+            if pitch_reference not in (None, "")
+            else DEFAULT_PITCH_REFERENCE
+        ),
     }
+    original_rows = _records_from_df(inventory_original)
+    edited_rows = _records_from_df(inventory_df)
+    part_rows = _records_from_df(part_transpose_df)
+    if original_rows and edited_rows:
+        try:
+            params["pitch_overrides"] = overrides_from_inventory_edits(
+                original_rows, edited_rows, part_rows
+            )
+        except ValueError as exc:
+            raise gr.Error(str(exc)) from exc
     ovr = pitch_sampling_override if pitch_sampling_override is not None else _PITCH_OVERRIDE_FOLLOW_PROFILE
     ovr_s = str(ovr).strip()
     if ovr_s and ovr_s != _PITCH_OVERRIDE_FOLLOW_PROFILE and ovr_s in PITCH_SAMPLING_MODES:
@@ -240,9 +333,21 @@ def run_dispersion_ui(
         register_high_midi=float(an.register_high),
         register_width_semitones=float(an.register_width_semitones),
         microtone_repair=rp.get("microtone_repair"),
+        pitch_reference=rp.get("pitch_reference"),
     )
     json_path = new_export_path("dispersion_data_", ".json")
     write_json_export(json_path, build_registral_dispersion_export(score_path, rp, out))
+    inventory_csv_path = new_export_path("pitch_inventory_", ".csv")
+    write_pitch_inventory_csv(inventory_csv_path, out.get("pitch_inventory") or [])
+    overrides_json_path = None
+    applied = out.get("pitch_overrides") or []
+    if applied:
+        overrides_json_path = new_export_path("pitch_overrides_", ".json")
+        save_pitch_overrides(overrides_json_path, applied)
+        try:
+            save_pitch_overrides(sidecar_path_for_score(score_path), applied)
+        except OSError:
+            pass
 
     heatmap_fig = None
     heatmap_plot_path = None
@@ -283,6 +388,8 @@ def run_dispersion_ui(
         json_path,
         heatmap_plot_path,
         heat_matrix_path,
+        inventory_csv_path,
+        overrides_json_path,
     )
 
 
@@ -466,6 +573,14 @@ def build_demo() -> gr.Blocks:
                     value=DEFAULT_MICROTONEREPAIR,
                     label="Microtone repair (MusicXML accidental glyphs)",
                 )
+                pitch_reference_u = gr.Radio(
+                    choices=[
+                        ("written — as notated (default)", "written"),
+                        ("sounding — concert pitch via music21 toSoundingPitch()", "sounding"),
+                    ],
+                    value=DEFAULT_PITCH_REFERENCE,
+                    label="Pitch reference",
+                )
                 show_span_in = gr.Checkbox(
                     value=False,
                     label="Overlay mean pairwise distance (secondary axis)",
@@ -477,6 +592,7 @@ def build_demo() -> gr.Blocks:
                 )
                 show_heatmap_in = gr.Checkbox(value=True, label="Include concentration heatmap (pitch × time)")
                 interactive_u = gr.Checkbox(value=True, label="Interactive plots (Plotly)")
+                load_btn = gr.Button("Load & inspect", variant="secondary")
                 run_btn = gr.Button("Run analysis", variant="primary")
 
                 with gr.Accordion("Advanced heatmap options", open=False):
@@ -535,6 +651,22 @@ def build_demo() -> gr.Blocks:
                 )
 
             with gr.Column(scale=2):
+                gr.Markdown("### Step 1 — Load & inspect")
+                inventory_out = gr.Dataframe(
+                    headers=INVENTORY_COLUMNS,
+                    label="Pitch inventory (edit sounding_ps / sounding_name and used_in_metrics)",
+                    interactive=True,
+                    wrap=True,
+                )
+                digest_out = gr.Markdown()
+                part_transpose_out = gr.Dataframe(
+                    headers=["part_index", "part", "instrument", "extra_semitones"],
+                    label="Extra transposition per part (semitones, may be fractional)",
+                    interactive=True,
+                )
+                inspect_warnings_out = gr.Textbox(label="Inspect warnings", lines=3)
+                inventory_state = gr.State([])
+                gr.Markdown("### Step 2 — Run analysis")
                 dispersion_plot_out = gr.Plot(label="Dispersion trajectory")
                 heatmap_plot_out = gr.Plot(label="Register density map")
                 summary_out = gr.Textbox(label="Summary", lines=16)
@@ -544,7 +676,26 @@ def build_demo() -> gr.Blocks:
                     dispersion_plot_file_out = gr.File(label="Dispersion plot PNG")
                     heatmap_plot_file_out = gr.File(label="Heatmap PNG")
                     heat_matrix_out = gr.File(label="Heatmap matrix CSV")
+                    inventory_csv_out = gr.File(label="Pitch inventory CSV")
+                    overrides_json_out = gr.File(label="Pitch overrides JSON")
 
+        load_btn.click(
+            fn=load_inspect_ui,
+            inputs=[
+                file_in,
+                register_low_in,
+                register_high_in,
+                pitch_reference_u,
+                microtone_repair_u,
+            ],
+            outputs=[
+                inventory_out,
+                digest_out,
+                part_transpose_out,
+                inspect_warnings_out,
+                inventory_state,
+            ],
+        )
         run_btn.click(
             fn=run_dispersion_ui,
             inputs=[
@@ -557,6 +708,10 @@ def build_demo() -> gr.Blocks:
                 observation_mode_u,
                 pitch_override_u,
                 microtone_repair_u,
+                pitch_reference_u,
+                inventory_out,
+                part_transpose_out,
+                inventory_state,
                 interactive_u,
                 show_span_in,
                 show_entropy_in,
@@ -575,6 +730,8 @@ def build_demo() -> gr.Blocks:
                 dispersion_json_out,
                 heatmap_plot_file_out,
                 heat_matrix_out,
+                inventory_csv_out,
+                overrides_json_out,
             ],
         )
     return demo

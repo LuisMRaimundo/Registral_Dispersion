@@ -10,6 +10,7 @@ from registral_dispersion.pitch_utils import DEFAULT_REGISTER_HIGH, DEFAULT_REGI
 from registral_dispersion.profiles import DEFAULT_ANALYSIS_PROFILE
 from registral_dispersion.service import run_registral_dispersion_analysis
 from registral_dispersion.microtone_repair import DEFAULT_MICROTONEREPAIR
+from registral_dispersion.pitch_reference import DEFAULT_PITCH_REFERENCE
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY
 from registral_dispersion.warnings import collect_interpretation_warnings, merge_warnings
 
@@ -22,6 +23,8 @@ DEFAULT_SUMMARIZE_PARAMS: dict[str, Any] = {
     "window_size": 4.0,
     "tie_policy": DEFAULT_TIE_POLICY,
     "microtone_repair": DEFAULT_MICROTONEREPAIR,
+    "pitch_reference": DEFAULT_PITCH_REFERENCE,
+    "pitch_overrides": [],
 }
 
 

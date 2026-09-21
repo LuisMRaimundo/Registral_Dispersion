@@ -19,7 +19,7 @@ They are **not**:
 
 The tool measures **how notated or parsed pitch events occupy and distribute themselves across register** within user-defined temporal supports (moving windows or event-boundary intervals) and within a user-defined registral band `[register_low, register_high]`.
 
-Every export should record **`analysis_profile`**, **`pitch_sampling_mode`**, **`observation_mode`**, **`tie_policy`**, **`microtone_repair`**, register bounds, and **`symbolic_score_only: true`** (JSON schema 1.9) so results remain reproducible and interpretable.
+Every export should record **`analysis_profile`**, **`pitch_sampling_mode`**, **`observation_mode`**, **`tie_policy`**, **`microtone_repair`**, **`pitch_reference`**, register bounds, and **`symbolic_score_only: true`** (JSON schema 1.10) so results remain reproducible and interpretable.
 
 ---
 
@@ -240,6 +240,28 @@ Import-time handling of MusicXML accidental glyphs whose stored `<alter>` does n
 
 MIDI is never rewritten. Applied edits are listed in export field `repairs`. Values are not comparable across modes for the same glyph-only file.
 
+### Order of operations
+
+Pitches that enter the metrics are produced in this order (do not compare results across skipped steps):
+
+1. **parse** (MusicXML / MXL / MIDI via music21)
+2. **microtone repair** (`microtone_repair`)
+3. **sounding conversion** (copy + `toSoundingPitch()` when `pitch_reference='sounding'`)
+4. **part-level overrides** (extra transposition in semitones, may be fractional)
+5. **note-level overrides** (manual `sounding_ps` / exclude)
+6. **tie policy**
+7. **event listing**
+8. **metrics**
+
+### `pitch_reference`
+
+| Mode | Effect |
+|------|--------|
+| **`written`** (default) | Analyze notated MIDI `pitch.ps`. Frozen benchmarks stay identical. If transposing parts exist (`Instrument.transposition` or MusicXML `<transpose>`), a warning lists them and states that metrics are **not** in sounding pitch. |
+| **`sounding`** | After repair, convert a **copy** of the score with music21 `toSoundingPitch()` (chromatic transpositions such as Horn in F / Bb clarinet, and octave-change instruments such as double bass). |
+
+The pitch inventory always shows both written and sounding columns. Transposing parts are recorded in `transposing_parts` (`part`, `instrument`, `interval_semitones`). Manual edits are listed in `pitch_overrides` (`manual_pitch` | `manual_exclude` | `part_transposition`).
+
 ### `register_low` / `register_high`
 
 - Parsed to MIDI **`pitch.ps`** (note names or numeric).
@@ -312,7 +334,7 @@ Used **together**, the metrics can support discussion of:
 - **No orchestration-weighted acoustic model** unless you implement one externally.
 - **Symbolic parsing quality** depends on MusicXML/MXL/MIDI encoding and **music21** import (transposition, ties, divisi, percussion spelling). Some exporters (Sibelius 8) write microtonal **glyphs** with an integer `<alter>`; default `microtone_repair='off'` then yields integer `pitch.ps`. Use `from_accidentals` to restore the glyph inflection, or `warn` to detect the mismatch without changing numbers.
 - **MIDI** cannot recover quarter-tones (pitch-bend is ignored); `microtone_repair` does not rewrite MIDI.
-- **Transposition, tie, sampling, and register assumptions** must be documented per analysis from export metadata (`tie_policy`, `pitch_sampling_source`, `observation_mode`, `microtone_repair`, bounds, `package_version`).
+- **Transposition, tie, sampling, and register assumptions** must be documented per analysis from export metadata (`tie_policy`, `pitch_reference`, `pitch_sampling_source`, `observation_mode`, `microtone_repair`, bounds, `package_version`). Default written-pitch analysis does **not** apply concert-pitch conversion; use `pitch_reference='sounding'` and check the pitch inventory digest against the score.
 
 ---
 

@@ -51,6 +51,14 @@ from registral_dispersion.microtone_repair import (
     detect_accidental_alter_mismatch,
     normalize_microtone_repair,
 )
+from registral_dispersion.pitch_inventory import build_pitch_inventory
+from registral_dispersion.pitch_reference import (
+    DEFAULT_PITCH_REFERENCE,
+    PITCH_REFERENCE_SOUNDING,
+    PITCH_REFERENCE_WRITTEN,
+    normalize_pitch_reference,
+)
+from registral_dispersion.pitch_utils import parse_pitch_input
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY, TIE_POLICY_AS_IMPORTED, TIE_POLICY_MERGE_TIES
 
 __all__ = [
@@ -62,7 +70,10 @@ __all__ = [
     "DEFAULT_REGISTRAL_DISPERSION_PARAMS",
     "DEFAULT_SUMMARIZE_PARAMS",
     "DEFAULT_MICROTONEREPAIR",
+    "DEFAULT_PITCH_REFERENCE",
     "DEFAULT_TIE_POLICY",
+    "PITCH_REFERENCE_SOUNDING",
+    "PITCH_REFERENCE_WRITTEN",
     "MICROTONEREPAIR_FROM_ACCIDENTALS",
     "MICROTONEREPAIR_OFF",
     "MICROTONEREPAIR_WARN",
@@ -76,8 +87,11 @@ __all__ = [
     "detect_accidental_alter_mismatch",
     "implied_pitch_sampling_mode",
     "normalize_analysis_profile",
+    "build_pitch_inventory",
     "normalize_microtone_repair",
+    "normalize_pitch_reference",
     "normalize_pitch_sampling_mode",
+    "parse_pitch_input",
     "resolve_registral_dispersion_params",
     "run_register_uniformity_analysis",
     "run_registral_dispersion_analysis",

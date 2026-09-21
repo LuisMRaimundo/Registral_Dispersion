@@ -31,7 +31,7 @@ from registral_dispersion.sampling import normalize_pitch_sampling_mode
 from registral_dispersion.service import resolve_registral_dispersion_params
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY
 
-JSON_EXPORT_SCHEMA_VERSION = "1.9"
+JSON_EXPORT_SCHEMA_VERSION = "1.10"
 
 TOOL_SCOPE_STATEMENT = (
     "Symbolic-score-only registral dispersion tool. Analyzes MusicXML, MXL, and MIDI via music21. "
@@ -116,6 +116,7 @@ def write_registral_dispersion_csv(
     register_high_midi: float | None = None,
     register_width_semitones: float | None = None,
     microtone_repair: str | None = None,
+    pitch_reference: str | None = None,
 ) -> str:
     """
     Write one CSV row per window with leading ``#`` comment lines (metric definitions).
@@ -172,6 +173,7 @@ def write_registral_dispersion_csv(
         f"# {OBSERVATION_MODES_CSV_BLURB}",
         f"# observation_mode: {obs_line}",
         f"# microtone_repair: {microtone_repair if microtone_repair is not None else 'off'}",
+        f"# pitch_reference: {pitch_reference if pitch_reference is not None else 'written'}",
     ]
     if register_low_midi is not None and register_high_midi is not None and register_width_semitones is not None:
         lines.extend(
@@ -237,6 +239,10 @@ def build_registral_dispersion_export(
         "observation_mode": obs_mode,
         "tie_policy": tie_pol,
         "microtone_repair": str(resolved.get("microtone_repair") or "off"),
+        "pitch_reference": str(resolved.get("pitch_reference") or "written"),
+        "transposing_parts": to_json_serializable(out.get("transposing_parts") or []),
+        "pitch_overrides": to_json_serializable(out.get("pitch_overrides") or []),
+        "pitch_inventory_digest": to_json_serializable(out.get("pitch_inventory_digest")),
         "symbolic_score_only": True,
         "tool_scope_statement": TOOL_SCOPE_STATEMENT,
         "error": out.get("error"),
@@ -290,6 +296,7 @@ def build_registral_dispersion_export(
             "observation_mode": obs_mode,
             "tie_policy": str(getattr(an, "tie_policy", tie_pol)),
             "microtone_repair": str(getattr(an, "microtone_repair", resolved.get("microtone_repair") or "off")),
+            "pitch_reference": str(getattr(an, "pitch_reference", resolved.get("pitch_reference") or "written")),
             "normalization_reference": NORMALIZATION_REFERENCE,
             "register_low_midi": rlo,
             "register_high_midi": rhi,

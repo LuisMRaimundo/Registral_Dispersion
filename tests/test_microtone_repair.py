@@ -108,7 +108,7 @@ def test_cluster_from_accidentals_recovers_quarter_tones() -> None:
     assert len(out["repairs"]) == 4
     assert any("from_accidentals" in w for w in out["warnings"])
     doc = build_registral_dispersion_export(str(CLUSTER), out["params"], out)
-    assert doc["schema_version"] == JSON_EXPORT_SCHEMA_VERSION == "1.9"
+    assert doc["schema_version"] == JSON_EXPORT_SCHEMA_VERSION == "1.10"
     assert doc["microtone_repair"] == "from_accidentals"
     assert doc["parameters"]["microtone_repair"] == "from_accidentals"
     assert len(doc["repairs"]) == 4

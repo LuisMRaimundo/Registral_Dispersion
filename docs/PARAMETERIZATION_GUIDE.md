@@ -20,8 +20,9 @@ All values below assume **MusicXML / MXL / MIDI** input parsed by **music21**. R
 | **Register preset** | **A0–C8 (full notated range)** | Results depend on the band. Normalized columns scale by `R = register_high − register_low`. |
 | **Raw vs normalized** | **Raw semitones** for primary publication; **normalized_*** for cross-score comparison with different register bounds | Normalized values are **not** perceptual brightness. |
 | **Heatmap (complement)** | Always include when exploring register **notational occupancy** (informal “density”) | Independent of dispersion formulas; use **registral_ember** + **log1p_counts**. See [METRIC_SEMANTICS.md](METRIC_SEMANTICS.md) §7. |
-| **Exports** | Always keep **CSV + JSON** | JSON records `analysis_profile`, `pitch_sampling_mode`, `observation_mode`, `microtone_repair`, formulas, and `package_version`. |
+| **Exports** | Always keep **CSV + JSON** | JSON records `analysis_profile`, `pitch_sampling_mode`, `observation_mode`, `microtone_repair`, `pitch_reference`, formulas, and `package_version`. Also keep `{prefix}_pitch_inventory.csv` from batch `analyze`. |
 | **`microtone_repair`** | **`off`** | Leave imported `<alter>` unchanged (reproducible default). Use **`warn`** to detect Sibelius-style glyph/`<alter>` mismatches, or **`from_accidentals`** to restore quarter-tones from the accidental glyph before analysis. MIDI is never rewritten. |
+| **`pitch_reference`** | **`written`** | Analyze notated pitches (reproducible default; frozen benchmarks stay identical). Use **`sounding`** for concert pitch (`toSoundingPitch()` after repair). Inspect the **pitch inventory** digest before publishing. |
 
 ### Analysis profile (choose one stance)
 
@@ -61,6 +62,7 @@ Each row describes a **fixed set of sounding pitches** — no moving-window blur
 | `time_step` | **`0.25`** | Inert for segmentation; keep default for export compatibility |
 | `window_size` | **`4.0`** | Inert for segmentation; keep default for export compatibility |
 | `microtone_repair` | **`off`** | Keep unless the MusicXML is a Sibelius-style glyph-only quarter-tone export |
+| `pitch_reference` | **`written`** | Keep unless the research question is concert-pitch register (transposing scores) |
 
 ### Primary metrics to read (per interval)
 
@@ -197,6 +199,7 @@ Sliding windows produce a **continuous (sampled) trajectory** of vertical openin
 | **`time_step`** | **`0.25`** qL | Standard grid: sixteenth-note at ♩=60; good balance detail / stability |
 | **`window_size`** | **`4.0`** qL | ~one bar at 4/4 ♩=60; smooths local texture without hiding bar-level change |
 | `microtone_repair` | **`off`** | Keep unless the MusicXML is a Sibelius-style glyph-only quarter-tone export |
+| `pitch_reference` | **`written`** | Keep unless the research question is concert-pitch register (transposing scores) |
 
 ### Alternative window sizes (same time_step)
 
@@ -323,6 +326,7 @@ out = run_registral_dispersion_analysis("score.musicxml", params_moving)
 | `register_low` / `register_high` | **A0 / C8** |
 | `tie_policy` | **`as_imported`** (or **`merge_ties`** for tied scores) |
 | `microtone_repair` | **`off`** (or **`from_accidentals`** for Sibelius glyph-only quarter-tone MusicXML) |
+| `pitch_reference` | **`written`** (or **`sounding`** for concert-pitch register on transposing scores) |
 
 Primary: **`duration_weighted_registral_span`**. Secondary: **`duration_weighted_mean_pairwise_registral_distance`**.
 
@@ -358,9 +362,9 @@ Then treat **`mean_pairwise_registral_distance`** as primary in both setups.
 2. Archive **exact parameter dict** (this document + your score path).  
 3. State **register band** and **profile** in the paper methods section.  
 4. Distinguish **dispersion metrics** from **occupancy_entropy** and from **concentration-map notational occupancy** (not acoustic density). See [METRIC_SEMANTICS.md](METRIC_SEMANTICS.md).  
-5. Record **`tie_policy`**, **`microtone_repair`**, **`global_summary`**, and any **`warnings`** / **`repairs`** from JSON export.  
+5. Record **`tie_policy`**, **`microtone_repair`**, **`pitch_reference`**, **`global_summary`**, the pitch-inventory digest, and any **`warnings`** / **`repairs`** / **`pitch_overrides`** from JSON export.  
 6. Run **`benchmarks/scripts/compare_frozen_outputs.py`** after intentional code changes (synthetic fixtures only).
 
 ---
 
-*Document version: 2026-09-21 — matches Registral_Dispersion / registral-dispersion 0.3.0 (plotting: primary `dispersion_degree`; JSON schema 1.9; `microtone_repair`).*
+*Document version: 2026-09-21 — matches Registral_Dispersion / registral-dispersion 0.3.0 (plotting: primary `dispersion_degree`; JSON schema 1.10; `microtone_repair`; `pitch_reference`).*
