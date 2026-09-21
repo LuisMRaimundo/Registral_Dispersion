@@ -19,7 +19,7 @@ They are **not**:
 
 The tool measures **how notated or parsed pitch events occupy and distribute themselves across register** within user-defined temporal supports (moving windows or event-boundary intervals) and within a user-defined registral band `[register_low, register_high]`.
 
-Every export should record **`analysis_profile`**, **`pitch_sampling_mode`**, **`observation_mode`**, **`tie_policy`**, **`microtone_repair`**, **`pitch_reference`**, register bounds, and **`symbolic_score_only: true`** (JSON schema 1.10) so results remain reproducible and interpretable.
+Every export should record **`analysis_profile`**, **`pitch_sampling_mode`**, **`observation_mode`**, **`tie_policy`**, **`microtone_repair`**, **`pitch_reference`**, register bounds, and **`symbolic_score_only: true`** (JSON schema 1.11) so results remain reproducible and interpretable.
 
 ---
 
@@ -248,7 +248,7 @@ Pitches that enter the metrics are produced in this order (do not compare result
 2. **microtone repair** (`microtone_repair`)
 3. **sounding conversion** (copy + `toSoundingPitch()` when `pitch_reference='sounding'`)
 4. **part-level overrides** (extra transposition in semitones, may be fractional)
-5. **note-level overrides** (manual `sounding_ps` / exclude)
+5. **note-level overrides** (manual `sounding_ps` / exclude; applied to the whole pre-tie chain and logged as `propagated_to`)
 6. **tie policy**
 7. **event listing**
 8. **metrics**

@@ -207,7 +207,7 @@ class TestWarnings(unittest.TestCase):
             out = run_registral_dispersion_analysis(str(path), {"observation_mode": "event_boundaries"})
             doc = build_registral_dispersion_export(str(path), {}, out)
             self.assertEqual(doc["schema_version"], JSON_EXPORT_SCHEMA_VERSION)
-            self.assertEqual(doc["schema_version"], "1.10")
+            self.assertEqual(doc["schema_version"], "1.11")
             self.assertIn("global_summary", doc)
             self.assertIn("tie_policy", doc)
             self.assertTrue(doc.get("symbolic_score_only"))

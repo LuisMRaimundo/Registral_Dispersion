@@ -31,7 +31,7 @@ from registral_dispersion.sampling import normalize_pitch_sampling_mode
 from registral_dispersion.service import resolve_registral_dispersion_params
 from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY
 
-JSON_EXPORT_SCHEMA_VERSION = "1.10"
+JSON_EXPORT_SCHEMA_VERSION = "1.11"
 
 TOOL_SCOPE_STATEMENT = (
     "Symbolic-score-only registral dispersion tool. Analyzes MusicXML, MXL, and MIDI via music21. "

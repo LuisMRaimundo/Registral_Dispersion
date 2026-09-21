@@ -124,7 +124,7 @@ So **sustained** notes count in every overlapped window, not only when an attack
   * **`event_instances`** (`component_weighted`) — keep every in-register MIDI value contributed by overlapping events (chord tones separately; **duplicated unisons across parts** and **repeated noteheads** count as multiple components).
   * **`unique_pitch_heights`** (`occupied_space`) — collapse to **distinct MIDI pitch numbers** within the window, then compute span, pairwise mean, and occupancy entropy. `active_note_count` is the length **after** this collapse.
 
-Exports (CSV comment lines and JSON) record **`analysis_profile`**, **`pitch_sampling_mode`**, **`pitch_sampling_source`**, **`observation_mode`**, **`microtone_repair`**, **`pitch_reference`**, register bounds and width, **`normalization_reference`**, explicit **formula / methodological** strings, and **`package_version`** / **`tool_role`** (JSON schema **1.10**) for reproducibility.
+Exports (CSV comment lines and JSON) record **`analysis_profile`**, **`pitch_sampling_mode`**, **`pitch_sampling_source`**, **`observation_mode`**, **`microtone_repair`**, **`pitch_reference`**, register bounds and width, **`normalization_reference`**, explicit **formula / methodological** strings, and **`package_version`** / **`tool_role`** (JSON schema **1.11**) for reproducibility.
 
 ## Install
 
@@ -250,7 +250,7 @@ Every successful `run_registral_dispersion_analysis` call now includes `out["glo
 | **`event_boundaries`** | Duration-weighted over intervals (skips NaN / empty rows) | `duration_weighted_registral_span`, `duration_weighted_mean_pairwise_registral_distance`, … |
 | **`fixed_window`** | Sampled trajectory summary (windows overlap; **not** duration states) | `sampled_mean_registral_span`, `sampled_max_registral_span`, … |
 
-JSON exports (schema **1.10**) include `global_summary`, `warnings`, `tie_policy`, `microtone_repair`, `pitch_reference`, `transposing_parts`, `pitch_overrides`, `pitch_inventory_digest`, `repairs`, and `symbolic_score_only: true`.  
+JSON exports (schema **1.11**) include `global_summary`, `warnings`, `tie_policy`, `microtone_repair`, `pitch_reference`, `transposing_parts`, `pitch_overrides`, `pitch_inventory_digest`, `repairs`, and `symbolic_score_only: true`.  
 Batch `analyze` also writes `{prefix}_global_summary.csv` (key/value, separate from per-row CSV) and `{prefix}_pitch_inventory.csv`.
 
 ## One-number API and CLI (recommended for a single score metric)
@@ -324,7 +324,9 @@ Each row has a stable `note_id` (`part_index:measure:offset:voice:chord_index`) 
 
 Below the table a one-line **digest** reports note count, unique sounding pitches, min, max, and the sorted unique list — the check against the score.
 
-**Gradio** is two steps: **Load & inspect** fills an editable table (`sounding_ps` / `sounding_name`, `used_in_metrics`) and a per-part extra transposition (semitones, may be fractional); **Run analysis** uses that edited state. **CLI:** `inventory --out inventory.csv`. **API:** `run_registral_dispersion_analysis(..., params={"pitch_overrides": [...]})`. Overrides are saved/loaded as `<score>.pitch_overrides.json` (`--pitch-overrides path.json`).
+**Gradio** is two steps: **Load & inspect** fills an editable table (`sounding_ps` / `sounding_name`, `used_in_metrics`) and a per-part extra transposition (semitones, may be fractional); **Run analysis** uses that edited state. **CLI:** `inventory --out inventory.csv`. **API:** `run_registral_dispersion_analysis(..., params={"pitch_overrides": [...]})`. Overrides are saved/loaded as `<score>.pitch_overrides.json` (`--pitch-overrides path.json`). The written sidecar is `{"pitch_overrides_schema": "1", "pitch_overrides": [...]}`; the loader still accepts a bare list or `{"pitch_overrides": [...]}`.
+
+`note_id`s and the inventory are computed **before** tie handling. A note-level override applies to the whole music21 tie chain and logs `propagated_to` (the other `note_id`s).
 
 Order of operations: parse → microtone repair → sounding conversion → part-level overrides → note-level overrides → tie policy → event listing → metrics. Default `pitch_reference='written'` and empty overrides keep frozen benchmarks identical.
 

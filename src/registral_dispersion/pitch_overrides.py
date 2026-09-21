@@ -16,6 +16,7 @@ OVERRIDE_KINDS = frozenset(
 )
 
 SIDECAR_SUFFIX = ".pitch_overrides.json"
+PITCH_OVERRIDES_SCHEMA = "1"
 
 _TRUE = frozenset({"1", "true", "yes", "y", "on"})
 _FALSE = frozenset({"0", "false", "no", "n", "off"})
@@ -70,6 +71,11 @@ def normalize_pitch_overrides(value: Any) -> list[dict[str, Any]]:
             "reason": raw.get("reason"),
             "kind": kind,
         }
+        if "propagated_to" in raw:
+            prop = raw.get("propagated_to") or []
+            if not isinstance(prop, list):
+                raise ValueError(f"pitch_overrides[{i}].propagated_to must be a list.")
+            entry["propagated_to"] = [str(x) for x in prop]
         if kind == OVERRIDE_KIND_MANUAL_PITCH:
             entry["new"] = parse_pitch_input(raw.get("new"))
             if raw.get("original") not in (None, ""):
@@ -104,16 +110,25 @@ def normalize_pitch_overrides(value: Any) -> list[dict[str, Any]]:
 
 
 def load_pitch_overrides(path: str | Path) -> list[dict[str, Any]]:
-    """Load a sidecar JSON list (or ``{\"pitch_overrides\": [...]}``)."""
+    """
+    Load a sidecar JSON file.
+
+    Accepts the current envelope
+    ``{\"pitch_overrides_schema\": \"1\", \"pitch_overrides\": [...]}``
+    and the older forms (a bare list, or ``{\"pitch_overrides\": [...]}``).
+    """
     p = Path(path)
     raw = json.loads(p.read_text(encoding="utf-8"))
     return normalize_pitch_overrides(raw)
 
 
 def save_pitch_overrides(path: str | Path, overrides: list[dict[str, Any]]) -> str:
-    """Write overrides as UTF-8 JSON; return the path as str."""
+    """Write the schema-1 sidecar envelope; return the path as str."""
     p = Path(path)
-    payload = {"pitch_overrides": list(overrides)}
+    payload = {
+        "pitch_overrides_schema": PITCH_OVERRIDES_SCHEMA,
+        "pitch_overrides": list(overrides),
+    }
     p.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
     return str(p)
 

@@ -362,9 +362,9 @@ Then treat **`mean_pairwise_registral_distance`** as primary in both setups.
 2. Archive **exact parameter dict** (this document + your score path).  
 3. State **register band** and **profile** in the paper methods section.  
 4. Distinguish **dispersion metrics** from **occupancy_entropy** and from **concentration-map notational occupancy** (not acoustic density). See [METRIC_SEMANTICS.md](METRIC_SEMANTICS.md).  
-5. Record **`tie_policy`**, **`microtone_repair`**, **`pitch_reference`**, **`global_summary`**, the pitch-inventory digest, and any **`warnings`** / **`repairs`** / **`pitch_overrides`** from JSON export.  
+5. Record **`tie_policy`**, **`microtone_repair`**, **`pitch_reference`**, **`global_summary`**, the pitch-inventory digest, and any **`warnings`** / **`repairs`** / **`pitch_overrides`** from JSON export (sidecar envelope `pitch_overrides_schema: "1"`; note-level `propagated_to` across ties).  
 6. Run **`benchmarks/scripts/compare_frozen_outputs.py`** after intentional code changes (synthetic fixtures only).
 
 ---
 
-*Document version: 2026-09-21 — matches Registral_Dispersion / registral-dispersion 0.3.0 (plotting: primary `dispersion_degree`; JSON schema 1.10; `microtone_repair`; `pitch_reference`).*
+*Document version: 2026-09-21 — matches Registral_Dispersion / registral-dispersion 0.3.0 (plotting: primary `dispersion_degree`; JSON schema 1.11; `microtone_repair`; `pitch_reference`).*

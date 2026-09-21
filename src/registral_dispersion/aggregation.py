@@ -14,7 +14,7 @@ from registral_dispersion.tie_policy import DEFAULT_TIE_POLICY
 
 AGGREGATION_DURATION_WEIGHTED = "duration_weighted_event_boundaries"
 AGGREGATION_SAMPLED_FIXED = "sampled_fixed_window_summary"
-SUMMARY_SCHEMA_VERSION = "1.10"
+SUMMARY_SCHEMA_VERSION = "1.11"
 
 
 def _package_version() -> str:

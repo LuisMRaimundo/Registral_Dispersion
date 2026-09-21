@@ -165,11 +165,16 @@ def _instrument_name(part) -> str:
     return str(inst)
 
 
-def _is_tied_continuation(el) -> bool:
+def _tie_type(el) -> str | None:
     tie = getattr(el, "tie", None)
     if tie is None:
-        return False
-    return getattr(tie, "type", None) in ("stop", "continue")
+        return None
+    t = getattr(tie, "type", None)
+    return None if t in (None, "") else str(t)
+
+
+def _is_tied_continuation(el) -> bool:
+    return _tie_type(el) in ("stop", "continue")
 
 
 def _accidental_glyph(pitch) -> str:
@@ -263,6 +268,36 @@ def stamp_note_ids(score: stream.Stream) -> dict[str, tuple[Any, int]]:
         misc[MISC_NOTE_IDS] = ids
         index[item.note_id] = (item.el, item.chord_index)
     return index
+
+
+def tie_chain_note_ids(score: stream.Stream) -> dict[str, list[str]]:
+    """
+    Map each ``note_id`` to every ``note_id`` in the same music21 tie chain.
+
+    Inventory / ids are computed **before** ``tie_policy``. A note-level override
+    therefore has to reach start, continue, and stop members explicitly.
+    """
+    open_chains: dict[tuple, list[str]] = {}
+    completed: list[list[str]] = []
+    for item in iter_score_pitch_items(score):
+        t = _tie_type(item.el)
+        key = (item.part_index, str(item.voice), int(item.chord_index))
+        if t == "start":
+            if key in open_chains:
+                completed.append(open_chains.pop(key))
+            open_chains[key] = [item.note_id]
+        elif t in ("continue", "stop"):
+            open_chains.setdefault(key, []).append(item.note_id)
+            if t == "stop":
+                completed.append(open_chains.pop(key))
+        else:
+            completed.append([item.note_id])
+    completed.extend(open_chains.values())
+    mapping: dict[str, list[str]] = {}
+    for chain in completed:
+        for nid in chain:
+            mapping[nid] = list(chain)
+    return mapping
 
 
 def _repair_keys(repairs: list[dict[str, Any]] | None) -> set[tuple]:
@@ -525,17 +560,19 @@ def apply_pitch_overrides(
     pitch_reference: str,
     register_low: float | None,
     register_high: float | None,
-) -> tuple[list[dict[str, Any]], list[str]]:
+) -> tuple[list[dict[str, Any]], list[str], list[dict[str, Any]]]:
     """
     Apply part-level then note-level overrides to ``working`` and update inventory rows.
 
-    Returns ``(rows, warnings)``.
+    Returns ``(rows, warnings, applied_overrides)``. Note-level edits set
+    ``propagated_to`` to the other ``note_id``s in the same pre-tie chain.
     """
     normalized = normalize_pitch_overrides(overrides)
     if not normalized:
-        return rows, []
+        return rows, [], []
     index = stamp_note_ids(working)
     by_id = {str(r["note_id"]): r for r in rows}
+    chains = tie_chain_note_ids(working)
     warnings: list[str] = []
 
     part_level = [o for o in normalized if o["kind"] == OVERRIDE_KIND_PART_TRANSPOSITION]
@@ -570,35 +607,46 @@ def apply_pitch_overrides(
 
     for ov in note_level:
         nid = str(ov.get("note_id") or "")
-        row = by_id.get(nid)
-        target = index.get(nid)
-        if row is None or target is None:
+        if not nid:
             continue
-        el, chord_index = target
-        if ov["kind"] == OVERRIDE_KIND_MANUAL_PITCH:
-            new_ps = float(ov["new"])
-            _set_component_ps(el, chord_index, new_ps)
-            if pitch_reference == PITCH_REFERENCE_SOUNDING:
+        chain = list(chains.get(nid, [nid]))
+        if nid not in chain:
+            chain.insert(0, nid)
+        others = [x for x in chain if x != nid]
+        ov["propagated_to"] = others
+        for member_id in chain:
+            row = by_id.get(member_id)
+            target = index.get(member_id)
+            if row is None or target is None:
+                continue
+            el, chord_index = target
+            if ov["kind"] == OVERRIDE_KIND_MANUAL_PITCH:
+                new_ps = float(ov["new"])
+                _set_component_ps(el, chord_index, new_ps)
+                if pitch_reference == PITCH_REFERENCE_SOUNDING:
+                    row["_sounding_ps"] = new_ps
+                else:
+                    row["_written_ps"] = new_ps
                 row["_sounding_ps"] = new_ps
-            else:
-                row["_written_ps"] = new_ps
-            row["_sounding_ps"] = new_ps
-            row["_pitch_overridden"] = True
-            if register_low is not None and register_high is not None and not _in_band(
-                new_ps, register_low, register_high
-            ):
-                warnings.append(warn_out_of_band_edit(nid, new_ps, float(register_low), float(register_high)))
-        elif ov["kind"] == OVERRIDE_KIND_MANUAL_EXCLUDE:
-            used = coerce_used_in_metrics(ov["new"])
-            row["_excluded"] = not used
-            if used:
-                _mark_included(el, chord_index)
-            else:
-                _mark_excluded(el, chord_index)
-        _refresh_row_derived(row, pitch_reference=pitch_reference, register_low=register_low, register_high=register_high)
+                row["_pitch_overridden"] = True
+                if (
+                    member_id == nid
+                    and register_low is not None
+                    and register_high is not None
+                    and not _in_band(new_ps, register_low, register_high)
+                ):
+                    warnings.append(warn_out_of_band_edit(nid, new_ps, float(register_low), float(register_high)))
+            elif ov["kind"] == OVERRIDE_KIND_MANUAL_EXCLUDE:
+                used = coerce_used_in_metrics(ov["new"])
+                row["_excluded"] = not used
+                if used:
+                    _mark_included(el, chord_index)
+                else:
+                    _mark_excluded(el, chord_index)
+            _refresh_row_derived(row, pitch_reference=pitch_reference, register_low=register_low, register_high=register_high)
 
     warnings.insert(0, warn_manual_overrides(len(normalized)))
-    return rows, warnings
+    return rows, warnings, normalized
 
 
 def prepare_score_for_analysis(
@@ -612,7 +660,8 @@ def prepare_score_for_analysis(
 ) -> PreparedScore:
     """
     After microtone repair: detect transposing parts, optional sounding conversion,
-    then part- and note-level overrides. Tie policy is applied by the analyzer afterwards.
+    then part- and note-level overrides. ``note_id``s and the inventory are computed
+    here, **before** any tie handling. Tie policy is applied by the analyzer afterwards.
     """
     ref = normalize_pitch_reference(pitch_reference)
     transposing = detect_transposing_parts(score)
@@ -631,7 +680,7 @@ def prepare_score_for_analysis(
     stamp_note_ids(working)
     applied = normalize_pitch_overrides(pitch_overrides)
     if applied:
-        rows, ov_warnings = apply_pitch_overrides(
+        rows, ov_warnings, applied = apply_pitch_overrides(
             working,
             rows,
             applied,

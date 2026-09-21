@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -10,6 +11,7 @@ import pytest
 from registral_dispersion.json_export import JSON_EXPORT_SCHEMA_VERSION, build_registral_dispersion_export
 from registral_dispersion.pitch_inventory import build_pitch_inventory, public_inventory_rows
 from registral_dispersion.pitch_overrides import (
+    PITCH_OVERRIDES_SCHEMA,
     load_pitch_overrides,
     save_pitch_overrides,
     sidecar_path_for_score,
@@ -29,6 +31,8 @@ from registral_dispersion.service import (
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 HORN = FIXTURES / "horn_brass_unpitched.musicxml"
+HORN_SIDECAR = FIXTURES / "horn_brass_unpitched.musicxml.pitch_overrides.json"
+TIED = FIXTURES / "tied_c4_pair.musicxml"
 BASS = FIXTURES / "double_bass_octave_change.musicxml"
 CLUSTER = FIXTURES / "sibelius_glyph_only_cluster.musicxml"
 
@@ -274,7 +278,7 @@ def test_written_no_overrides_matches_historical_cluster() -> None:
 def test_json_export_includes_inventory_fields() -> None:
     out = run_registral_dispersion_analysis(str(HORN), {**_PARAMS, "pitch_reference": "sounding"})
     doc = build_registral_dispersion_export(str(HORN), out["params"], out)
-    assert doc["schema_version"] == JSON_EXPORT_SCHEMA_VERSION == "1.10"
+    assert doc["schema_version"] == JSON_EXPORT_SCHEMA_VERSION == "1.11"
     assert doc["pitch_reference"] == "sounding"
     assert doc["transposing_parts"]
     assert doc["pitch_inventory_digest"]["n_unique"] == 9
@@ -288,3 +292,67 @@ def test_inspect_inventory_lists_unpitched() -> None:
     public = public_inventory_rows(out["pitch_inventory_raw"])
     assert all("note_id" in row for row in public)
     assert "unique sounding" in out["digest_line"]
+
+
+def test_save_pitch_overrides_writes_schema_envelope(tmp_path: Path) -> None:
+    path = tmp_path / "overrides.json"
+    save_pitch_overrides(path, [])
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data == {"pitch_overrides_schema": PITCH_OVERRIDES_SCHEMA, "pitch_overrides": []}
+
+
+def test_load_pitch_overrides_accepts_legacy_forms(tmp_path: Path) -> None:
+    bare = tmp_path / "bare.json"
+    bare.write_text("[]", encoding="utf-8")
+    assert load_pitch_overrides(bare) == []
+    wrapped = tmp_path / "wrapped.json"
+    wrapped.write_text('{"pitch_overrides": []}', encoding="utf-8")
+    assert load_pitch_overrides(wrapped) == []
+
+
+def test_cross_tool_horn_sidecar_loads_without_error() -> None:
+    """A sidecar written by this tool for the horn fixture is loadable elsewhere."""
+    loaded = load_pitch_overrides(HORN_SIDECAR)
+    out = inspect_score_pitches(
+        str(HORN),
+        {**_PARAMS, "pitch_reference": "sounding", "pitch_overrides": loaded},
+    )
+    assert out.get("error") is None
+    digest = out["pitch_inventory_digest"]
+    assert digest["n_unique"] == 9
+    assert digest["min"] == pytest.approx(33.0)
+    assert digest["max"] == pytest.approx(61.0)
+
+
+def test_note_level_override_propagates_across_tie_chain() -> None:
+    inspect = inspect_score_pitches(str(TIED), {**_PARAMS, "pitch_reference": "written"})
+    assert inspect.get("error") is None
+    rows = inspect["pitch_inventory"]
+    assert len(rows) == 2
+    start, stop = rows[0], rows[1]
+    assert start["note_id"] != stop["note_id"]
+    ov = [
+        {
+            "note_id": start["note_id"],
+            "part": start["part"],
+            "measure": start["measure"],
+            "field": "sounding_ps",
+            "original": start["sounding_ps"],
+            "new": 72.0,
+            "kind": "manual_pitch",
+        }
+    ]
+    out = run_registral_dispersion_analysis(
+        str(TIED),
+        {**_PARAMS, "pitch_reference": "written", "pitch_overrides": ov, "tie_policy": "as_imported"},
+    )
+    assert out.get("error") is None
+    logged = [e for e in out["pitch_overrides"] if e["kind"] == "manual_pitch"]
+    assert len(logged) == 1
+    assert logged[0]["propagated_to"] == [stop["note_id"]]
+    by_id = {row["note_id"]: row for row in out["pitch_inventory"]}
+    assert by_id[start["note_id"]]["sounding_ps"] == pytest.approx(72.0)
+    assert by_id[stop["note_id"]]["sounding_ps"] == pytest.approx(72.0)
+    i = _sounding_row(out)
+    assert out["results"]["min_pitch"][i] == pytest.approx(72.0)
+    assert out["results"]["max_pitch"][i] == pytest.approx(72.0)
